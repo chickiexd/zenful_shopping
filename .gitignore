@@ -1,0 +1,59 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.a
+
+# Output of the go tool
+*.o
+*.obj
+*.gch
+*.elf
+
+# Go dependency directories
+vendor/
+Godeps/
+
+# IDEs and Editors
+.vscode/
+.idea/
+
+# Neovim swap files
+*.swp
+*.swo
+
+# Neovim undo files
+*.un~
+
+# Neovim backup files
+*.bak
+
+# Logs and Temporary files
+*.log
+*.tmp
+*.temp
+
+# Go specific
+*.test
+*.cover
+
+# Dependency files
+go.sum
+
+# Environment and config files (Security)
+.env
+.env.*
+*.env
+*.env.*
+
+# Secret files
+*.pem
+*.key
+*.crt
+*.cert
+
+# Build directories and files
+/build/
+dist/
