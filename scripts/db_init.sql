@@ -1,0 +1,1 @@
+CREATE DATABASE zenful_shopping
