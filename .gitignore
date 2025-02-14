@@ -44,6 +44,7 @@ go.sum
 
 # Environment and config files (Security)
 .env
+.envrc
 .env.*
 *.env
 *.env.*
