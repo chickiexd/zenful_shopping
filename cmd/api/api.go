@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"zenful_shopping_backend/internal/store"
+	"zenful_shopping_backend/internal/handler"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,12 +12,13 @@ import (
 
 type application struct {
 	config config
-	store  store.Storage
+	handler handler.Handler
 }
 
 type config struct {
 	addr string
 	db   dbConfig
+	env string
 }
 
 type dbConfig struct {
@@ -46,7 +47,13 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+		// r.Get("/ingredients", app.handler.Ingredients.GetAll)
+		r.Route("/ingredients", func(r chi.Router) {
+			r.Get("/", app.handler.Ingredients.GetAll)
+			r.Post("/", app.handler.Ingredients.Create)
+		})
 	})
+
 
 	//recipes
 	//users

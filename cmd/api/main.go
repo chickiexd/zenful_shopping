@@ -4,10 +4,12 @@ import (
 	"log"
 	"zenful_shopping_backend/internal/db"
 	"zenful_shopping_backend/internal/env"
-	"zenful_shopping_backend/internal/store"
-	"zenful_shopping_backend/internal/service"
 	"zenful_shopping_backend/internal/handler"
+	"zenful_shopping_backend/internal/service"
+	"zenful_shopping_backend/internal/store"
 )
+
+const version = "0.0.1"
 
 func main() {
 
@@ -23,6 +25,7 @@ func main() {
 			// maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			// maxIdleTime: env.GetString("DB_MAX_IDLE_TIME", "15min"),
 		},
+		env: env.GetString("ENV", "dev"),
 	}
 
 	db, err := db.New(cfg.db.host, cfg.db.user, cfg.db.password, cfg.db.dbname, cfg.db.port)
@@ -31,17 +34,16 @@ func main() {
 	}
 	log.Println("db connection established")
 
-	service := service.NewService()
-
 	store := store.NewStorage(db)
+	service := service.NewService(&store)
+	handler := handler.NewHandler(&service)
 
 	app := &application{
-		config: cfg,
-		store:  store,
+		config:  cfg,
+		handler: handler,
 	}
 
 	mux := app.mount()
 
 	log.Fatal(app.run(mux))
-
 }

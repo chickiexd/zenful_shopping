@@ -26,10 +26,6 @@ type RecipeRepository struct {
 	db *gorm.DB
 }
 
-// func NewRecipeRepository(db *gorm.DB) *RecipeRepository {
-// 	return &RecipeRepository{db: db}
-// }
-
 func (r *RecipeRepository) Create(ctx context.Context, recipe *Recipe) error {
 	if err := r.db.WithContext(ctx).Create(recipe).Error; err != nil {
 		return err

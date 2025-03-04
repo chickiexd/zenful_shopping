@@ -7,7 +7,7 @@ import (
 )
 
 type userService struct {
-	storage store.Storage
+	storage *store.Storage
 }
 
 func (s *userService) Create(ctx context.Context, user *store.User) error {

@@ -7,7 +7,7 @@ import (
 )
 
 type recipeService struct {
-	storage store.Storage
+	storage *store.Storage
 }
 
 func (s *recipeService) Create(ctx context.Context, recipe *store.Recipe) error {
