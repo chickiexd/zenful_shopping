@@ -10,7 +10,15 @@ migration:
 
 .PHONY: migrate-up
 migrate-up:
-	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up 
+
+.PHONY: migrate-version
+migrate-version:
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) version 
+
+.PHONY: migrate-force
+migrate-force:
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) force 1 
 
 .PHONY: migrate-down
 migrate-down:
