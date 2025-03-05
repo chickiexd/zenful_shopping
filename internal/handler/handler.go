@@ -15,6 +15,9 @@ type Handler struct {
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
 	}
+	ChatGPT interface {
+		ParseRecipe(http.ResponseWriter, *http.Request)
+	}
 }
 
 func NewHandler(service *service.Service) Handler {
@@ -22,5 +25,6 @@ func NewHandler(service *service.Service) Handler {
 		// Recipes: &RecipeHandler{service},
 		Ingredients: &IngredientHandler{service},
 		// Users:   &userHandler{service},
+		ChatGPT: &ChatGPTHandler{service},
 	}
 }

@@ -18,12 +18,17 @@ type Service struct {
 	Users interface {
 		Create(context.Context, *store.User) error
 	}
+	ChatGPT interface {
+		ParseRecipe(string) (*dto.CreateRecipeRequest, error)
+	}
 }
 
 func NewService(store *store.Storage) Service {
+	openAIService := NewOpenAIService()
 	return Service{
 		Recipes: &recipeService{store},
 		Users:   &userService{store},
 		Ingredients: &ingredientService{store},
+		ChatGPT: openAIService,
 	}
 }
