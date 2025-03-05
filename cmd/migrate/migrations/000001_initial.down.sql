@@ -1,19 +1,12 @@
-DROP TABLE IF EXISTS UserIngredients;
-DROP TABLE IF EXISTS ShoppingListItems;
-DROP TABLE IF EXISTS ShoppingLists;
-DROP TABLE IF EXISTS IngredientFoodGroups;
-DROP TABLE IF EXISTS FoodGroups;
-DROP TABLE IF EXISTS RecipeMealTypes;
-DROP TABLE IF EXISTS MealTypes;
-DROP TABLE IF EXISTS RecipeInstructions;
-DROP TABLE IF EXISTS Instructions;
-DROP TABLE IF EXISTS RecipeIngredients;
+-- Drop the many-to-many relationship join table first
 DROP TABLE IF EXISTS IngredientMeasurementUnits;
-DROP TABLE IF EXISTS MeasurementUnits;
+
+-- Remove the foreign key column in Ingredients that links to FoodGroups
+ALTER TABLE Ingredients DROP CONSTRAINT IF EXISTS FK_FoodGroup;
+ALTER TABLE Ingredients DROP COLUMN IF EXISTS FoodGroupID;
+
+-- Drop main tables in reverse order of their dependencies to ensure integrity
 DROP TABLE IF EXISTS Ingredients;
-DROP TABLE IF EXISTS Recipes;
-DROP TABLE IF EXISTS Images;
-DROP TABLE IF EXISTS UserRoles;
-DROP TABLE IF EXISTS Roles;
-DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS MeasurementUnits;
+DROP TABLE IF EXISTS FoodGroups;
 
