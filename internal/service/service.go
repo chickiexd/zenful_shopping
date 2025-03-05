@@ -12,8 +12,8 @@ type Service struct {
 	}
 	Ingredients interface {
 		Create(*dto.CreateIngredientRequest) error
-		GetByID(int64) (*dto.IngredientResponse, error)
-		GetAll() ([]dto.IngredientResponse, error)
+		GetByID(uint) (*store.Ingredient, error)
+		GetAll() ([]store.Ingredient, error)
 	}
 	Users interface {
 		Create(context.Context, *store.User) error

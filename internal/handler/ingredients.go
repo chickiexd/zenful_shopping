@@ -14,8 +14,11 @@ type IngredientHandler struct {
 }
 
 func (h *IngredientHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	log.Println("test")
-	h.service.Ingredients.GetAll()
+	ingredients, err := h.service.Ingredients.GetAll();
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
+	}
+	utils.WriteJSON(w, http.StatusOK, ingredients)
 }
 
 func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +28,6 @@ func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 	}
 	h.service.Ingredients.Create(&ingredient)
-
 }
 
 // func (h *RecipeHandler) Create(c *gin.Context, recipe *CreateRecipeRequest) {

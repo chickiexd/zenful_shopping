@@ -12,8 +12,12 @@ type Storage struct {
 	}
 	Ingredients interface {
 		Create(*Ingredient) error
-		GetByID(int64) (*Ingredient, error)
+		GetByID(uint) (*Ingredient, error)
+		GetByName(string) (*Ingredient, error)
 		GetAll() ([]Ingredient, error)
+		GetAllTest() ([]Ingredient, error)
+		GetMeasurementUnitsByID(uint) ([]MeasurementUnit, error)
+		GetFoodGroupsByID(uint) ([]FoodGroup, error)
 	}
 	Users interface {
 		Create(context.Context, *User) error
@@ -22,8 +26,8 @@ type Storage struct {
 
 func NewStorage(db *gorm.DB) Storage {
 	return Storage{
-		Recipes: &RecipeRepository{db},
-		Users:   &UserRepository{db},
-		Ingredients:   &IngredientRepository{db},
+		Recipes:     &RecipeRepository{db},
+		Users:       &UserRepository{db},
+		Ingredients: &IngredientRepository{db},
 	}
 }
