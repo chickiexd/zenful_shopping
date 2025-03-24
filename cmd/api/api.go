@@ -51,6 +51,14 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.handler.Ingredients.GetAll)
 			r.Post("/", app.handler.Ingredients.Create)
 		})
+		r.Route("/measurement_units", func(r chi.Router) {
+			r.Get("/", app.handler.MeasurementUnits.GetAll)
+			r.Post("/", app.handler.MeasurementUnits.Create)
+		})
+		r.Route("/food_groups", func(r chi.Router) {
+			r.Get("/", app.handler.FoodGroups.GetAll)
+			r.Post("/", app.handler.FoodGroups.Create)
+		})
 		r.Route("/recipes", func(r chi.Router) {
 			r.Get("/", app.handler.Ingredients.GetAll)
 			r.Post("/", app.handler.Ingredients.Create)

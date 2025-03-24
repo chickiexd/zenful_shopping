@@ -15,6 +15,16 @@ type Handler struct {
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
 	}
+	MeasurementUnits interface {
+		// Create(context.Context, *CreateRecipeRequest) error
+		GetAll(http.ResponseWriter, *http.Request)
+		Create(http.ResponseWriter, *http.Request)
+	}
+	FoodGroups interface {
+		// Create(context.Context, *CreateRecipeRequest) error
+		GetAll(http.ResponseWriter, *http.Request)
+		Create(http.ResponseWriter, *http.Request)
+	}
 	ChatGPT interface {
 		ParseRecipe(http.ResponseWriter, *http.Request)
 	}
@@ -24,6 +34,8 @@ func NewHandler(service *service.Service) Handler {
 	return Handler{
 		// Recipes: &RecipeHandler{service},
 		Ingredients: &IngredientHandler{service},
+		MeasurementUnits: &MeasurementUnitHandler{service},
+		FoodGroups: &FoodGroupHandler{service},
 		// Users:   &userHandler{service},
 		ChatGPT: &ChatGPTHandler{service},
 	}

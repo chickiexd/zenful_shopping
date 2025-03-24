@@ -19,6 +19,14 @@ type Storage struct {
 		GetMeasurementUnitsByID(uint) ([]MeasurementUnit, error)
 		GetFoodGroupsByID(uint) ([]FoodGroup, error)
 	}
+	MeasurementUnits interface {
+		Create(*MeasurementUnit) error
+		GetAll() ([]MeasurementUnit, error)
+	}
+	FoodGroups interface {
+		Create(*FoodGroup) error
+		GetAll() ([]FoodGroup, error)
+	}
 	Users interface {
 		Create(context.Context, *User) error
 	}
@@ -29,5 +37,7 @@ func NewStorage(db *gorm.DB) Storage {
 		Recipes:     &RecipeRepository{db},
 		Users:       &UserRepository{db},
 		Ingredients: &IngredientRepository{db},
+		MeasurementUnits: &MeasurementRepository{db},
+		FoodGroups: &FoodGroupRepository{db},
 	}
 }

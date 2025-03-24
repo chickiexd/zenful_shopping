@@ -15,6 +15,14 @@ type Service struct {
 		GetByID(uint) (*store.Ingredient, error)
 		GetAll() ([]store.Ingredient, error)
 	}
+	MeasurmentUnits interface {
+		Create(*dto.CreateMeasurementUnit) error
+		GetAll() ([]store.MeasurementUnit, error)
+	}
+	FoodGroups interface {
+		Create(*dto.CreateFoodGroup) error
+		GetAll() ([]store.FoodGroup, error)
+	}
 	Users interface {
 		Create(context.Context, *store.User) error
 	}
@@ -29,6 +37,8 @@ func NewService(store *store.Storage) Service {
 		Recipes: &recipeService{store},
 		Users:   &userService{store},
 		Ingredients: &ingredientService{store},
+		MeasurmentUnits: &MeasurementUnitService{store},
+		FoodGroups: &FoodGroupService{store},
 		ChatGPT: openAIService,
 	}
 }
