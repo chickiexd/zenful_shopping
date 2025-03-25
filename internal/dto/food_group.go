@@ -1,6 +1,7 @@
 package dto
 
 type CreateFoodGroup struct {
+	FoodGroupID uint   `json:"food_group_id"`
 	Name string `json:"name"`
-	Desc string `json:"desc"`
+	Description string `json:"description"`
 }

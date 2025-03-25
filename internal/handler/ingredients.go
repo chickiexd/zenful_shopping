@@ -25,10 +25,12 @@ func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var ingredient dto.CreateIngredientRequest
 	if err := utils.ReadJSON(w, r, &ingredient); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 	created_ingredient, err := h.service.Ingredients.Create(&ingredient)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	log.Println("created_ingredient: ", created_ingredient)
 	utils.WriteJSON(w, http.StatusOK, created_ingredient)
