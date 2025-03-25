@@ -12,8 +12,9 @@ type ingredientService struct {
 	storage *store.Storage
 }
 
-func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) error {
-	return s.storage.DB.Transaction(func(tx *gorm.DB) error {
+func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*store.Ingredient, error) {
+	var created_ingredient *store.Ingredient
+	err := s.storage.DB.Transaction(func(tx *gorm.DB) error {
 		ingredientsRepo := s.storage.Ingredients.(*store.IngredientRepository).WithTransaction(tx)
 		measurementUnitsRepo := s.storage.MeasurementUnits.(*store.MeasurementRepository).WithTransaction(tx)
 		foodGroupsRepo := s.storage.FoodGroups.(*store.FoodGroupRepository).WithTransaction(tx)
@@ -38,12 +39,11 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) erro
 			food_group = ingredient.FoodGroup
 		}
 
-		var ingredient_to_create *store.Ingredient
 		if ingredient.IngredientID == 0 {
-			ingredient_to_create = &store.Ingredient{
+			created_ingredient = &store.Ingredient{
 				Name: ingredient.Name,
 			}
-			if err := ingredientsRepo.Create(ingredient_to_create); err != nil {
+			if err := ingredientsRepo.Create(created_ingredient); err != nil {
 				return err
 			}
 		} else {
@@ -51,17 +51,26 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) erro
 			if err != nil {
 				return err
 			}
-			ingredient_to_create = result
+			created_ingredient = result
 		}
 
-		if err := ingredientsRepo.CreateMeasurementUnitAssociation(ingredient_to_create, &measurement); err != nil {
+		if err := ingredientsRepo.CreateMeasurementUnitAssociation(created_ingredient, &measurement); err != nil {
 			return err
 		}
-		if err := ingredientsRepo.CreateFoodGroupAssociation(ingredient_to_create, &food_group); err != nil {
+		if err := ingredientsRepo.CreateFoodGroupAssociation(created_ingredient, &food_group); err != nil {
+			return err
+		}
+
+		if err := tx.Preload("MeasurementUnits").Preload("FoodGroups").First(&created_ingredient, created_ingredient.IngredientID).Error; err != nil {
 			return err
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return created_ingredient, nil
 }
 
 func (s *ingredientService) GetAll() ([]store.Ingredient, error) {

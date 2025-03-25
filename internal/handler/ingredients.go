@@ -1,7 +1,7 @@
 package handler
 
 import (
-	// "log"
+	"log"
 	"net/http"
 
 	"zenful_shopping_backend/internal/dto"
@@ -26,7 +26,12 @@ func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := utils.ReadJSON(w, r, &ingredient); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 	}
-	h.service.Ingredients.Create(&ingredient)
+	created_ingredient, err := h.service.Ingredients.Create(&ingredient)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+	}
+	log.Println("created_ingredient: ", created_ingredient)
+	utils.WriteJSON(w, http.StatusOK, created_ingredient)
 }
 
 // func (h *RecipeHandler) Create(c *gin.Context, recipe *CreateRecipeRequest) {

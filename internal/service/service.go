@@ -11,7 +11,7 @@ type Service struct {
 		Create(context.Context, *store.Recipe) error
 	}
 	Ingredients interface {
-		Create(*dto.CreateIngredientRequest) error
+		Create(*dto.CreateIngredientRequest) (*store.Ingredient, error)
 		GetByID(uint) (*store.Ingredient, error)
 		GetAll() ([]store.Ingredient, error)
 	}
