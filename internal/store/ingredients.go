@@ -1,6 +1,7 @@
 package store
 
 import (
+	"log"
 	"time"
 
 	"gorm.io/gorm"
@@ -20,8 +21,27 @@ type IngredientRepository struct {
 	db *gorm.DB
 }
 
+func (r *IngredientRepository) WithTransaction(tx *gorm.DB) *IngredientRepository {
+	return &IngredientRepository{db: tx}
+}	
+
 func (r *IngredientRepository) Create(ingredient *Ingredient) error {
 	if err := r.db.Create(ingredient).Error; err != nil {
+		return err
+	}
+	log.Println("CREATETATEATST")
+	return nil
+}
+
+func (r *IngredientRepository) CreateFoodGroupAssociation(ingredient *Ingredient, foodGroup *FoodGroup) error {
+	if err := r.db.Model(ingredient).Association("FoodGroups").Append(foodGroup); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *IngredientRepository) CreateMeasurementUnitAssociation(ingredient *Ingredient, measurementUnit *MeasurementUnit) error {
+	if err := r.db.Model(ingredient).Association("MeasurementUnits").Append(measurementUnit); err != nil {
 		return err
 	}
 	return nil

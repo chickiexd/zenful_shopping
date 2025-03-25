@@ -7,6 +7,7 @@ import (
 )
 
 type Storage struct {
+	DB      *gorm.DB
 	Recipes interface {
 		Create(context.Context, *Recipe) error
 	}
@@ -20,12 +21,16 @@ type Storage struct {
 		GetFoodGroupsByID(uint) ([]FoodGroup, error)
 	}
 	MeasurementUnits interface {
+		WithTransaction(*gorm.DB) *MeasurementRepository
 		Create(*MeasurementUnit) error
 		GetAll() ([]MeasurementUnit, error)
+		GetByID(uint) (*MeasurementUnit, error)
 	}
 	FoodGroups interface {
+		WithTransaction(*gorm.DB) *FoodGroupRepository
 		Create(*FoodGroup) error
 		GetAll() ([]FoodGroup, error)
+		GetByID(uint) (*FoodGroup, error)
 	}
 	Users interface {
 		Create(context.Context, *User) error
@@ -34,10 +39,11 @@ type Storage struct {
 
 func NewStorage(db *gorm.DB) Storage {
 	return Storage{
-		Recipes:     &RecipeRepository{db},
-		Users:       &UserRepository{db},
-		Ingredients: &IngredientRepository{db},
+		DB:               db,
+		Recipes:          &RecipeRepository{db},
+		Users:            &UserRepository{db},
+		Ingredients:      &IngredientRepository{db},
 		MeasurementUnits: &MeasurementRepository{db},
-		FoodGroups: &FoodGroupRepository{db},
+		FoodGroups:       &FoodGroupRepository{db},
 	}
 }

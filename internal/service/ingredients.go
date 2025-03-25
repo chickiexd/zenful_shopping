@@ -1,9 +1,11 @@
 package service
 
 import (
-	"log"
+	// "log"
 	"zenful_shopping_backend/internal/dto"
 	"zenful_shopping_backend/internal/store"
+
+	"gorm.io/gorm"
 )
 
 type ingredientService struct {
@@ -11,71 +13,60 @@ type ingredientService struct {
 }
 
 func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) error {
-	log.Println("service create ingredient_id")
-	return s.storage.Ingredients.Create(nil)
+	return s.storage.DB.Transaction(func(tx *gorm.DB) error {
+		ingredientsRepo := s.storage.Ingredients.(*store.IngredientRepository).WithTransaction(tx)
+		measurementUnitsRepo := s.storage.MeasurementUnits.(*store.MeasurementRepository).WithTransaction(tx)
+		foodGroupsRepo := s.storage.FoodGroups.(*store.FoodGroupRepository).WithTransaction(tx)
+
+		var measurement store.MeasurementUnit
+		if ingredient.Measurement.MeasurementUnitID == 0 {
+			measurement = store.MeasurementUnit{Name: ingredient.Measurement.Name}
+			if err := measurementUnitsRepo.Create(&measurement); err != nil {
+				return err
+			}
+		} else {
+			measurement = ingredient.Measurement
+		}
+
+		var food_group store.FoodGroup
+		if ingredient.FoodGroup.FoodGroupID == 0 {
+			food_group = store.FoodGroup{Name: ingredient.FoodGroup.Name}
+			if err := foodGroupsRepo.Create(&food_group); err != nil {
+				return err
+			}
+		} else {
+			food_group = ingredient.FoodGroup
+		}
+
+		var ingredient_to_create *store.Ingredient
+		if ingredient.IngredientID == 0 {
+			ingredient_to_create = &store.Ingredient{
+				Name: ingredient.Name,
+			}
+			if err := ingredientsRepo.Create(ingredient_to_create); err != nil {
+				return err
+			}
+		} else {
+			result, err := ingredientsRepo.GetByID(ingredient.IngredientID)
+			if err != nil {
+				return err
+			}
+			ingredient_to_create = result
+		}
+
+		if err := ingredientsRepo.CreateMeasurementUnitAssociation(ingredient_to_create, &measurement); err != nil {
+			return err
+		}
+		if err := ingredientsRepo.CreateFoodGroupAssociation(ingredient_to_create, &food_group); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (s *ingredientService) GetAll() ([]store.Ingredient, error) {
-	// get food group
-	// get measurements
-	// ingredients, err := s.storage.Ingredients.GetAll()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// log.Println(ingredients)
-	//
-	// var ingredientsResponse []dto.IngredientResponse
-	//
-	// for _, ingredient := range ingredients {
-	// 	var ingredientResponse dto.IngredientResponse
-	// 	measurements, err := s.storage.Ingredients.GetMeasurementUnitsByID(ingredient.IngredientID)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	foodGroups, err := s.storage.Ingredients.GetFoodGroupsByID(ingredient.IngredientID)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	//
-	// 	ingredientResponse.IngredientID = ingredient.IngredientID
-	// 	ingredientResponse.Name = ingredient.Name
-	// 	ingredientResponse.Measurements = measurements
-	// 	ingredientResponse.FoodGroups = foodGroups
-	//
-	// 	ingredientsResponse = append(ingredientsResponse, ingredientResponse)
-	// }
-	//
-	// log.Println(ingredientsResponse)
-	// return ingredientsResponse, nil
-
 	ingredients, err := s.storage.Ingredients.GetAllTest()
-
 	return ingredients, err
-
-
-	// measurements, err := s.storage.Ingredients.GetMeasurementUnitsByID(1)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// log.Println(measurements)
-
-	// ingredients = append(ingredients, dto.IngredientResponse{
-	// 	IngredientID: 1,
-	// 	Name:         "Tomato",
-	// 	Measurements: []dto.IngredientResponseMeasurement{
-	// 		{MeasurementID: 1, Name: "Cup"},
-	// 		{MeasurementID: 2, Name: "Ounce"},
-	// 	},
-	// 	FoodGroup: dto.IngredientResponseFoodGroup{
-	// 		FoodGroupID: 1,
-	// 		Name:        "Vegetables",
-	// 	},
-	// })
-	// log.Println(ingredients)
-
-	// return ingredients, nil
-	return nil, nil
 }
 
 func (s *ingredientService) GetByID(id uint) (*store.Ingredient, error) {

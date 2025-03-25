@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"log"
+	// "log"
 	"net/http"
 
 	"zenful_shopping_backend/internal/dto"
@@ -22,7 +22,6 @@ func (h *IngredientHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
-	log.Println("create")
 	var ingredient dto.CreateIngredientRequest
 	if err := utils.ReadJSON(w, r, &ingredient); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())

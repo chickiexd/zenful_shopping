@@ -7,15 +7,19 @@ import (
 )
 
 type MeasurementUnit struct {
-	MeasurementUnitID uint         `gorm:"primaryKey"`
-	Name              string       `gorm:"not null"`
-	CreatedAt         time.Time    `gorm:"autoCreateTime"`
-	UpdatedAt         time.Time    `gorm:"autoUpdateTime"`
-	Ingredients       []Ingredient `gorm:"many2many:ingredient_measurement_units;joinForeignKey:MeasurementUnitID;joinReferences:IngredientID"`
+	MeasurementUnitID uint         `gorm:"primaryKey" json:"measurement_unit_id"`
+	Name              string       `gorm:"not null" json:"name"`
+	CreatedAt         time.Time    `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt         time.Time    `gorm:"autoUpdateTime" json:"updated_at"`
+	Ingredients       []Ingredient `gorm:"many2many:ingredient_measurement_units;joinForeignKey:MeasurementUnitID;joinReferences:IngredientID" json:"ingredients"`
 }
 
 type MeasurementRepository struct {
 	db *gorm.DB
+}
+
+func (r *MeasurementRepository) WithTransaction(tx *gorm.DB) *MeasurementRepository {
+	return &MeasurementRepository{db: tx}
 }
 
 func (r *MeasurementRepository) Create(measurement_unit *MeasurementUnit) error {
@@ -31,4 +35,10 @@ func (r *MeasurementRepository) GetAll() ([]MeasurementUnit, error) {
 		Preload("Ingredients").
 		Find(&measurements).Error
 	return measurements, err
+}
+
+func (r *MeasurementRepository) GetByID(id uint) (*MeasurementUnit, error) {
+	var measurement MeasurementUnit
+	err := r.db.First(&measurement, id).Error
+	return &measurement, err
 }

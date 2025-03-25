@@ -7,16 +7,20 @@ import (
 )
 
 type FoodGroup struct {
-	FoodGroupID uint   `gorm:"primaryKey"`
-	Name        string `gorm:"unique;not null"`
-	Description string
-	CreatedAt   time.Time    `gorm:"autoCreateTime"`
-	UpdatedAt   time.Time    `gorm:"autoUpdateTime"`
-	Ingredients []Ingredient `gorm:"many2many:ingredient_food_groups;joinForeignKey:FoodGroupID;joinReferences:IngredientID"`
+	FoodGroupID uint   `gorm:"primaryKey" json:"food_group_id"`
+	Name        string `gorm:"unique;not null" json:"name"`
+	Description string `json:"description"`
+	CreatedAt   time.Time    `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time    `gorm:"autoUpdateTime" json:"updated_at"`
+	Ingredients []Ingredient `gorm:"many2many:ingredient_food_groups;joinForeignKey:FoodGroupID;joinReferences:IngredientID" json:"ingredients"`
 }
 
 type FoodGroupRepository struct {
 	db *gorm.DB
+}
+
+func (r *FoodGroupRepository) WithTransaction(tx *gorm.DB) *FoodGroupRepository {
+	return &FoodGroupRepository{db: tx}
 }
 
 func (r *FoodGroupRepository) Create(food_group *FoodGroup) error {
@@ -32,4 +36,10 @@ func (r *FoodGroupRepository) GetAll() ([]FoodGroup, error) {
 		Preload("Ingredients").
 		Find(&food_groups).Error
 	return food_groups, err
+}
+
+func (r *FoodGroupRepository) GetByID(id uint) (*FoodGroup, error) {
+	var food_group FoodGroup
+	err := r.db.First(&food_group, id).Error
+	return &food_group, err
 }
