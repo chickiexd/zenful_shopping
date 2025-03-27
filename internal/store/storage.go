@@ -9,14 +9,14 @@ import (
 type Storage struct {
 	DB      *gorm.DB
 	Recipes interface {
-		Create(context.Context, *Recipe) error
+		GetAll() ([]Recipe, error)
+		Create(*Recipe) error
 	}
 	Ingredients interface {
 		Create(*Ingredient) error
 		GetByID(uint) (*Ingredient, error)
 		GetByName(string) (*Ingredient, error)
 		GetAll() ([]Ingredient, error)
-		GetAllTest() ([]Ingredient, error)
 		GetMeasurementUnitsByID(uint) ([]MeasurementUnit, error)
 		GetFoodGroupsByID(uint) ([]FoodGroup, error)
 	}
