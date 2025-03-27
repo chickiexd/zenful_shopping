@@ -91,7 +91,7 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*st
 }
 
 func (s *ingredientService) GetAll() ([]store.Ingredient, error) {
-	ingredients, err := s.storage.Ingredients.GetAllTest()
+	ingredients, err := s.storage.Ingredients.GetAll()
 	return ingredients, err
 }
 

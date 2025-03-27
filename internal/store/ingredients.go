@@ -15,6 +15,7 @@ type Ingredient struct {
 	UpdatedAt        time.Time         `gorm:"autoUpdateTime"`
 	MeasurementUnits []MeasurementUnit `gorm:"many2many:ingredient_measurement_units;joinForeignKey:IngredientID;joinReferences:MeasurementUnitID"`
 	FoodGroups       []FoodGroup       `gorm:"many2many:ingredient_food_groups;joinForeignKey:IngredientID;joinReferences:FoodGroupID"`
+	Recipes          []Recipe          `gorm:"many2many:recipe_has_ingredients;"`
 }
 
 type IngredientRepository struct {
@@ -23,13 +24,12 @@ type IngredientRepository struct {
 
 func (r *IngredientRepository) WithTransaction(tx *gorm.DB) *IngredientRepository {
 	return &IngredientRepository{db: tx}
-}	
+}
 
 func (r *IngredientRepository) Create(ingredient *Ingredient) error {
 	if err := r.db.Create(ingredient).Error; err != nil {
 		return err
 	}
-	log.Println("CREATETATEATST")
 	return nil
 }
 
@@ -59,18 +59,13 @@ func (r *IngredientRepository) GetByName(name string) (*Ingredient, error) {
 	return &ingredient, err
 }
 
-func (r *IngredientRepository) GetAllTest() ([]Ingredient, error) {
-	var ingredients []Ingredient
-    err := r.db.
-        Preload("FoodGroups").
-        Preload("MeasurementUnits").
-        Find(&ingredients).Error
-    return ingredients, err
-}
-
 func (r *IngredientRepository) GetAll() ([]Ingredient, error) {
 	var ingredients []Ingredient
-	err := r.db.Find(&ingredients).Error
+	err := r.db.
+		Preload("FoodGroups").
+		Preload("MeasurementUnits").
+		Preload("Recipes").
+		Find(&ingredients).Error
 	return ingredients, err
 }
 
