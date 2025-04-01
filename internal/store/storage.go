@@ -35,6 +35,12 @@ type Storage struct {
 	Users interface {
 		Create(context.Context, *User) error
 	}
+	Instructions interface {
+		WithTransaction(*gorm.DB) *InstructionRepository
+		Create(*Instruction) error
+		GetByID(uint) (*Instruction, error)
+		GetByRecipeID(uint) ([]Instruction, error)
+	}
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -45,5 +51,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Ingredients:      &IngredientRepository{db},
 		MeasurementUnits: &MeasurementRepository{db},
 		FoodGroups:       &FoodGroupRepository{db},
+		Instructions:     &InstructionRepository{db},
 	}
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"zenful_shopping_backend/internal/dto"
 	"zenful_shopping_backend/internal/service"
@@ -11,9 +12,8 @@ type RecipeHandler struct {
 	service *service.Service
 }
 
-
 func (h *RecipeHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	recipes, err := h.service.Recipes.GetAll();
+	recipes, err := h.service.Recipes.GetAll()
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
 	}
@@ -21,15 +21,42 @@ func (h *RecipeHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RecipeHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var recipe dto.CreateRecipeRequest
-	if err := utils.ReadJSON(w, r, &recipe); err != nil {
-		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	created_recipe, err := h.service.Recipes.Create(&recipe)
-	if err != nil {
-		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	utils.WriteJSON(w, http.StatusOK, created_recipe)
+    err := r.ParseMultipartForm(10 << 20) // 10MB max memory
+    if err != nil {
+        http.Error(w, "Error parsing form data", http.StatusBadRequest)
+        return
+    }
+
+    var req dto.CreateRecipeRequest
+
+    if err := json.Unmarshal([]byte(r.FormValue("recipe")), &req.Recipe); err != nil {
+        http.Error(w, "Invalid recipe field", http.StatusBadRequest)
+        return
+    }
+
+    if err := json.Unmarshal([]byte(r.FormValue("ingredients")), &req.Ingredients); err != nil {
+        http.Error(w, "Invalid ingredients field", http.StatusBadRequest)
+        return
+    }
+
+    if err := json.Unmarshal([]byte(r.FormValue("instructions")), &req.Instructions); err != nil {
+        http.Error(w, "Invalid instructions field", http.StatusBadRequest)
+        return
+    }
+
+    file, fileHeader, err := r.FormFile("image")
+    if err != nil {
+        http.Error(w, "Error reading image", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
+    req.Image = file
+    req.ImageHeader = fileHeader
+
+	h.service.Recipes.Create(&req)
+
+    w.WriteHeader(http.StatusCreated)
+    w.Write([]byte("Recipe created successfully"))
 }
+
+

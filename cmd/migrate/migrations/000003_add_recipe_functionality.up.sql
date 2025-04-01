@@ -20,9 +20,8 @@ CREATE TABLE recipes (
     public        BOOLEAN DEFAULT FALSE,
     cook_time     INTEGER,
     servings      INTEGER,
-    image         TEXT,
+    image_path    TEXT,
     meal_type_id  INTEGER REFERENCES meal_types(meal_type_id),
-    user_id       INTEGER NOT NULL REFERENCES users(user_id),
     created_at    TIMESTAMP DEFAULT now(),
     updated_at    TIMESTAMP DEFAULT now()
 );
@@ -31,6 +30,7 @@ CREATE TABLE recipes (
 CREATE TABLE recipe_ingredients (
     recipe_id      INTEGER NOT NULL REFERENCES recipes(recipe_id),
     ingredient_id  INTEGER NOT NULL REFERENCES ingredients(ingredient_id),
+    measurement_unit_id  INTEGER NOT NULL REFERENCES measurement_units(measurement_unit_id),
     quantity       DOUBLE PRECISION NOT NULL DEFAULT 1.0,
     PRIMARY KEY (recipe_id, ingredient_id)
 );

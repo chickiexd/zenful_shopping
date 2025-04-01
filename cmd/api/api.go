@@ -60,8 +60,8 @@ func (app *application) mount() http.Handler {
 			r.Post("/", app.handler.FoodGroups.Create)
 		})
 		r.Route("/recipes", func(r chi.Router) {
-			r.Get("/", app.handler.Ingredients.GetAll)
-			r.Post("/", app.handler.Ingredients.Create)
+			r.Get("/", app.handler.Recipes.GetAll)
+			r.Post("/", app.handler.Recipes.Create)
 			r.Post("/parse", app.handler.ChatGPT.ParseRecipe)
 		})
 	})

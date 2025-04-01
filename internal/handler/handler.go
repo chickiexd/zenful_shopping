@@ -6,17 +6,15 @@ import (
 )
 
 type Handler struct {
-	// Recipes interface {
-	// 	// Create(context.Context, *CreateRecipeRequest) error
-	// 	GetAll(*context.Context) error
-	// }
+	Recipes interface {
+		Create(http.ResponseWriter, *http.Request)
+		GetAll(http.ResponseWriter, *http.Request)
+	}
 	Ingredients interface {
-		// Create(context.Context, *CreateRecipeRequest) error
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
 	}
 	MeasurementUnits interface {
-		// Create(context.Context, *CreateRecipeRequest) error
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
 	}
@@ -32,7 +30,7 @@ type Handler struct {
 
 func NewHandler(service *service.Service) Handler {
 	return Handler{
-		// Recipes: &RecipeHandler{service},
+		Recipes: &RecipeHandler{service},
 		Ingredients: &IngredientHandler{service},
 		MeasurementUnits: &MeasurementUnitHandler{service},
 		FoodGroups: &FoodGroupHandler{service},

@@ -1,7 +1,6 @@
 package store
 
 import (
-	"log"
 	"time"
 
 	"gorm.io/gorm"

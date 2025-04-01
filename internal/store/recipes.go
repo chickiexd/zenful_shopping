@@ -1,37 +1,42 @@
 package store
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Recipe struct {
-	RecipeID     uint `gorm:"primaryKey"`
-	Title        string
-	Description  string
-	Public       bool
-	CookTime     int
-	Servings     int
-	Image        string
-	UserID       uint
-	MealTypeID   uint
-	User         User          `gorm:"foreignKey:UserID"`
-	MealType     MealType      `gorm:"foreignKey:MealTypeID"`
-	Ingredients  []Ingredient  `gorm:"many2many:recipe_has_ingredients;"`
-	Instructions []Instruction `gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE;"`
-	CreatedAt    time.Time     `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time     `gorm:"autoUpdateTime"`
+	RecipeID          uint `gorm:"primaryKey"`
+	Title             string
+	Description       string
+	Public            bool
+	CookTime          int
+	Servings          int
+	ImagePath         string
+	MealTypeID        uint
+	MealType          MealType           `gorm:"foreignKey:MealTypeID"`
+	RecipeIngredients []RecipeIngredient `gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE;"`
+	Ingredients       []Ingredient       `gorm:"many2many:recipe_ingredients;joinForeignKey:RecipeID;joinReferences:IngredientID"`
+	Instructions      []Instruction      `gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE;"`
+	CreatedAt         time.Time          `gorm:"autoCreateTime"`
+	UpdatedAt         time.Time          `gorm:"autoUpdateTime"`
 }
 
-type RecipeHasIngredient struct {
-	RecipeID     uint `gorm:"primaryKey"`
-	IngredientID uint `gorm:"primaryKey"`
-	Quantity     float64
-	Ingredient   Ingredient `gorm:"foreignKey:IngredientID"`
+type RecipeIngredient struct {
+	RecipeID          uint `gorm:"primaryKey"`
+	IngredientID      uint `gorm:"primaryKey"`
+	MeasurementUnitID uint
+	Quantity          float64
+	Ingredient        Ingredient      `gorm:"foreignKey:IngredientID"`
+	MeasurementUnit   MeasurementUnit `gorm:"foreignKey:MeasurementUnitID"`
 }
 
 type RecipeRepository struct {
 	db *gorm.DB
+}
+
+func (r *RecipeRepository) WithTransaction(tx *gorm.DB) *RecipeRepository {
+	return &RecipeRepository{db: tx}
 }
 
 func (r *RecipeRepository) Create(recipe *Recipe) error {
@@ -50,4 +55,11 @@ func (r *RecipeRepository) GetAll() ([]Recipe, error) {
 		Preload("MealType").
 		Find(&recipes).Error
 	return recipes, err
+}
+
+func (r *RecipeRepository) CreateIngredientAssociation(recipeIngredient *RecipeIngredient) error {
+	if err := r.db.Create(recipeIngredient).Error; err != nil {
+		return err
+	}
+	return nil
 }
