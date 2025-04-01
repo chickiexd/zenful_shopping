@@ -106,7 +106,44 @@ func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeRespons
 	return recipe_response, nil
 }
 
-func (s *recipeService) GetAll() ([]store.Recipe, error) {
+func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {
 	recipes, err := s.storage.Recipes.GetAll()
-	return recipes, err
+	if err != nil {
+		return nil, err
+	}
+
+	recipes_response := make([]dto.RecipeResponse, len(recipes))
+	for i, recipe := range recipes {
+		instructions := make([]dto.InstructionResponse, len(recipe.Instructions))
+		for j, instr := range recipe.Instructions {
+			instructions[j] = dto.InstructionResponse{
+				InstructionID: instr.InstructionID,
+				Description: instr.Description,
+				StepNumber:  instr.StepNumber,
+			}
+		}
+		ingredients := make([]dto.IngredientResponse, len(recipe.RecipeIngredients))
+		for j, ing := range recipe.RecipeIngredients {
+			ingredients[j] = dto.IngredientResponse{
+				IngredientID:      ing.IngredientID,
+				Quantity:          ing.Quantity,
+				MeasurementUnitID: ing.MeasurementUnitID,
+			}
+		}
+		recipes_response[i] = dto.RecipeResponse{
+			RecipeID:     recipe.RecipeID,
+			Title:        recipe.Title,
+			Description:  recipe.Description,
+			Public:       recipe.Public,
+			CookTime:     recipe.CookTime,
+			Servings:     recipe.Servings,
+			ImagePath:    recipe.ImagePath,
+			MealType:     recipe.MealTypeID,
+			CreatedAt:    recipe.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:    recipe.UpdatedAt.Format("2006-01-02 15:04:05"),
+			Ingredients:  ingredients,
+			Instructions: instructions,
+		}
+	}
+	return recipes_response, err
 }

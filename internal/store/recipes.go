@@ -49,9 +49,9 @@ func (r *RecipeRepository) Create(recipe *Recipe) error {
 func (r *RecipeRepository) GetAll() ([]Recipe, error) {
 	var recipes []Recipe
 	err := r.db.
-		Preload("Ingredients").
+		Preload("RecipeIngredients.Ingredient").
+		Preload("RecipeIngredients.MeasurementUnit").
 		Preload("Instructions").
-		Preload("User").
 		Preload("MealType").
 		Find(&recipes).Error
 	return recipes, err

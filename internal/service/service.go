@@ -8,7 +8,7 @@ import (
 
 type Service struct {
 	Recipes interface {
-		GetAll() ([]store.Recipe, error)
+		GetAll() ([]dto.RecipeResponse, error)
 		Create(*dto.CreateRecipeRequest) (*dto.RecipeResponse, error)
 	}
 	Ingredients interface {

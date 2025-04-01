@@ -19,7 +19,6 @@ type RecipeResponse struct {
 
 type IngredientResponse struct {
 	IngredientID      uint    `json:"ingredient_id"`
-	Name              string  `json:"name"`
 	Quantity          float64 `json:"quantity"`
 	MeasurementUnitID uint    `json:"measurement_unit_id"`
 }
