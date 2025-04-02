@@ -26,15 +26,19 @@ type Handler struct {
 	ChatGPT interface {
 		ParseRecipe(http.ResponseWriter, *http.Request)
 	}
+	Images interface {
+		Get(http.ResponseWriter, *http.Request)
+	}
 }
 
 func NewHandler(service *service.Service) Handler {
 	return Handler{
-		Recipes: &RecipeHandler{service},
-		Ingredients: &IngredientHandler{service},
+		Recipes:          &RecipeHandler{service},
+		Ingredients:      &IngredientHandler{service},
 		MeasurementUnits: &MeasurementUnitHandler{service},
-		FoodGroups: &FoodGroupHandler{service},
+		FoodGroups:       &FoodGroupHandler{service},
+		ChatGPT:          &ChatGPTHandler{service},
+		Images:           &ImageHandler{service},
 		// Users:   &userHandler{service},
-		ChatGPT: &ChatGPTHandler{service},
 	}
 }

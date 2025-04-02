@@ -64,6 +64,9 @@ func (app *application) mount() http.Handler {
 			r.Post("/", app.handler.Recipes.Create)
 			r.Post("/parse", app.handler.ChatGPT.ParseRecipe)
 		})
+		r.Route("/images", func(r chi.Router) {
+			r.Get("/{filename}", app.handler.Images.Get)
+		})
 	})
 
 

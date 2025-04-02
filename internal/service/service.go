@@ -30,6 +30,9 @@ type Service struct {
 	ChatGPT interface {
 		ParseRecipe(string) (*dto.CreateRecipeRequest, error)
 	}
+	Images interface {
+		Get(string) ([]byte, error)
+	}
 }
 
 func NewService(store *store.Storage) Service {
@@ -40,6 +43,7 @@ func NewService(store *store.Storage) Service {
 		Ingredients: &ingredientService{store},
 		MeasurmentUnits: &MeasurementUnitService{store},
 		FoodGroups: &FoodGroupService{store},
+		Images: &ImageService{},
 		ChatGPT: openAIService,
 	}
 }
