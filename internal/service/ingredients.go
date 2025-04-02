@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 	"zenful_shopping_backend/internal/dto"
 	"zenful_shopping_backend/internal/store"
 
@@ -14,8 +13,6 @@ type ingredientService struct {
 }
 
 func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*dto.IngredientResponse, error) {
-	log.Println("service create ingredient_id")
-	log.Println(ingredient)
 	var created_ingredient *store.Ingredient
 	err := s.storage.DB.Transaction(func(tx *gorm.DB) error {
 		ingredientsRepo := s.storage.Ingredients.(*store.IngredientRepository).WithTransaction(tx)
