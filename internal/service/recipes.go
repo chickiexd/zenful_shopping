@@ -80,9 +80,9 @@ func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeRespons
 			StepNumber:  instr.StepNumber,
 		}
 	}
-	ingredients := make([]dto.IngredientResponse, len(created_recipe.RecipeIngredients))
+	ingredients := make([]dto.RecipeIngredientResponse, len(created_recipe.RecipeIngredients))
 	for i, ing := range created_recipe.RecipeIngredients {
-		ingredients[i] = dto.IngredientResponse{
+		ingredients[i] = dto.RecipeIngredientResponse{
 			IngredientID:      ing.IngredientID,
 			Quantity:          ing.Quantity,
 			MeasurementUnitID: ing.MeasurementUnitID,
@@ -122,9 +122,9 @@ func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {
 				StepNumber:  instr.StepNumber,
 			}
 		}
-		ingredients := make([]dto.IngredientResponse, len(recipe.RecipeIngredients))
+		ingredients := make([]dto.RecipeIngredientResponse, len(recipe.RecipeIngredients))
 		for j, ing := range recipe.RecipeIngredients {
-			ingredients[j] = dto.IngredientResponse{
+			ingredients[j] = dto.RecipeIngredientResponse{
 				IngredientID:      ing.IngredientID,
 				Quantity:          ing.Quantity,
 				MeasurementUnitID: ing.MeasurementUnitID,

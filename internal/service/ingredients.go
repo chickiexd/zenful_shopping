@@ -13,7 +13,7 @@ type ingredientService struct {
 	storage *store.Storage
 }
 
-func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*store.Ingredient, error) {
+func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*dto.IngredientResponse, error) {
 	log.Println("service create ingredient_id")
 	log.Println(ingredient)
 	var created_ingredient *store.Ingredient
@@ -87,18 +87,53 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*st
 		return nil, err
 	}
 
-	return created_ingredient, nil
+	created_ingredient_response := convert_store_to_dto_ingredient(created_ingredient)
+
+	return created_ingredient_response, nil
 }
 
-func (s *ingredientService) GetAll() ([]store.Ingredient, error) {
+func (s *ingredientService) GetAll() ([]dto.IngredientResponse, error) {
 	ingredients, err := s.storage.Ingredients.GetAll()
-	return ingredients, err
+	if err != nil {
+		return nil, err
+	}
+	ingredients_response := make([]dto.IngredientResponse, len(ingredients))
+	for i, ingredient := range ingredients {
+		ingredients_response[i] = *convert_store_to_dto_ingredient(&ingredient)
+	}
+	return ingredients_response, err
 }
 
-func (s *ingredientService) GetByID(id uint) (*store.Ingredient, error) {
+func (s *ingredientService) GetByID(id uint) (*dto.IngredientResponse, error) {
 	ingredient, err := s.storage.Ingredients.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
-	return ingredient, nil
+	ingredient_response := convert_store_to_dto_ingredient(ingredient)
+	return ingredient_response, nil
+}
+
+func convert_store_to_dto_ingredient(ingredient *store.Ingredient) *dto.IngredientResponse {
+	measurements := make([]dto.MeasurementUnitResponse, len(ingredient.MeasurementUnits))
+	for i, measurement := range ingredient.MeasurementUnits {
+		measurements[i] = dto.MeasurementUnitResponse{
+			MeasurementUnitID: measurement.MeasurementUnitID,
+			Name:              measurement.Name,
+		}
+	}
+	food_groups := make([]dto.FoodGroupResponse, len(ingredient.FoodGroups))
+	for i, food_group := range ingredient.FoodGroups {
+		food_groups[i] = dto.FoodGroupResponse{
+			FoodGroupID: food_group.FoodGroupID,
+			Name:        food_group.Name,
+		}
+	}
+	ingredient_response := &dto.IngredientResponse{
+		IngredientID: ingredient.IngredientID,
+		Name:         ingredient.Name,
+		Description:  ingredient.Description,
+		Measurements: measurements,
+		FoodGroups:   food_groups,
+	}
+	return ingredient_response
 }

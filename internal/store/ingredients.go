@@ -14,7 +14,7 @@ type Ingredient struct {
 	UpdatedAt        time.Time         `gorm:"autoUpdateTime"`
 	MeasurementUnits []MeasurementUnit `gorm:"many2many:ingredient_measurement_units;joinForeignKey:IngredientID;joinReferences:MeasurementUnitID"`
 	FoodGroups       []FoodGroup       `gorm:"many2many:ingredient_food_groups;joinForeignKey:IngredientID;joinReferences:FoodGroupID"`
-	Recipes          []Recipe          `gorm:"many2many:recipe_has_ingredients;"`
+	Recipes          []Recipe          `gorm:"many2many:recipe_ingredients;"`
 }
 
 type IngredientRepository struct {
@@ -63,7 +63,6 @@ func (r *IngredientRepository) GetAll() ([]Ingredient, error) {
 	err := r.db.
 		Preload("FoodGroups").
 		Preload("MeasurementUnits").
-		Preload("Recipes").
 		Find(&ingredients).Error
 	return ingredients, err
 }

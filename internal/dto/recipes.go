@@ -11,13 +11,13 @@ type RecipeResponse struct {
 	Servings     int                   `json:"servings"`
 	ImagePath    string                `json:"image_path"`
 	MealType     uint                  `json:"meal_type"`
-	Ingredients  []IngredientResponse  `json:"ingredients"`
+	Ingredients  []RecipeIngredientResponse  `json:"ingredients"`
 	Instructions []InstructionResponse `json:"instructions"`
 	CreatedAt    string                `json:"created_at"`
 	UpdatedAt    string                `json:"updated_at"`
 }
 
-type IngredientResponse struct {
+type RecipeIngredientResponse struct {
 	IngredientID      uint    `json:"ingredient_id"`
 	Quantity          float64 `json:"quantity"`
 	MeasurementUnitID uint    `json:"measurement_unit_id"`

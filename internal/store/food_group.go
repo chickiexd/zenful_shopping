@@ -7,9 +7,9 @@ import (
 )
 
 type FoodGroup struct {
-	FoodGroupID uint   `gorm:"primaryKey" json:"food_group_id"`
-	Name        string `gorm:"unique;not null" json:"name"`
-	Description string `json:"description"`
+	FoodGroupID uint         `gorm:"primaryKey" json:"food_group_id"`
+	Name        string       `gorm:"unique;not null" json:"name"`
+	Description string       `json:"description"`
 	CreatedAt   time.Time    `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time    `gorm:"autoUpdateTime" json:"updated_at"`
 	Ingredients []Ingredient `gorm:"many2many:ingredient_food_groups;joinForeignKey:FoodGroupID;joinReferences:IngredientID" json:"ingredients"`

@@ -12,9 +12,9 @@ type Service struct {
 		Create(*dto.CreateRecipeRequest) (*dto.RecipeResponse, error)
 	}
 	Ingredients interface {
-		Create(*dto.CreateIngredientRequest) (*store.Ingredient, error)
-		GetByID(uint) (*store.Ingredient, error)
-		GetAll() ([]store.Ingredient, error)
+		Create(*dto.CreateIngredientRequest) (*dto.IngredientResponse, error)
+		GetByID(uint) (*dto.IngredientResponse, error)
+		GetAll() ([]dto.IngredientResponse, error)
 	}
 	MeasurmentUnits interface {
 		Create(*dto.CreateMeasurementUnit) error
