@@ -14,13 +14,13 @@ func SaveImageLocally(file multipart.File, header *multipart.FileHeader) (string
 	defer file.Close()
 
 	ext := filepath.Ext(header.Filename)
-	fileName := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	savePath := filepath.Join("uploads", "recipes", fileName)
+	file_name := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+	save_path := filepath.Join("uploads", "recipes", file_name)
 
-	if err := os.MkdirAll(filepath.Dir(savePath), os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath.Dir(save_path), os.ModePerm); err != nil {
 		return "", err
 	}
-	dst, err := os.Create(savePath)
+	dst, err := os.Create(save_path)
 	if err != nil {
 		return "", err
 	}
@@ -29,5 +29,5 @@ func SaveImageLocally(file multipart.File, header *multipart.FileHeader) (string
 		return "", err
 	}
 
-	return savePath, nil
+	return file_name, nil
 }
