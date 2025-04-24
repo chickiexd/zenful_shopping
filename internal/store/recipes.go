@@ -63,3 +63,14 @@ func (r *RecipeRepository) CreateIngredientAssociation(recipeIngredient *RecipeI
 	}
 	return nil
 }
+
+func (r *RecipeRepository) GetByID(id uint) (*Recipe, error) {
+	var recipe Recipe
+	err := r.db.
+		Preload("RecipeIngredients.Ingredient").
+		Preload("RecipeIngredients.MeasurementUnit").
+		Preload("Instructions").
+		Preload("MealType").
+		First(&recipe, id).Error
+	return &recipe, err
+}

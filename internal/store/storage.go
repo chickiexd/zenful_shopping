@@ -11,6 +11,7 @@ type Storage struct {
 	Recipes interface {
 		GetAll() ([]Recipe, error)
 		Create(*Recipe) error
+		GetByID(uint) (*Recipe, error)
 	}
 	Ingredients interface {
 		Create(*Ingredient) error
@@ -41,6 +42,19 @@ type Storage struct {
 		GetByID(uint) (*Instruction, error)
 		GetByRecipeID(uint) ([]Instruction, error)
 	}
+	ShoppingLists interface {
+		GetAll() ([]ShoppingList, error)
+		WithTransaction(*gorm.DB) *ShoppingListRepository
+		Create(*ShoppingList) error
+		CreateFoodGroupAssociation(*ShoppingList, *FoodGroup) error
+		CreateIngredientAssociation(*ShoppingListItem) error
+		GetByFoodGroupID(uint) ([]ShoppingList, error)
+		GetItemsByIngredientID(uint) ([]ShoppingListItem, error)
+		GetItemsByShoppingListID(uint) ([]ShoppingListItem, error)
+		CreateItemAssociation(*ShoppingListItem) error
+		DeleteItemAssociation(*ShoppingListItem) error
+		UpdateItemAssociation(*ShoppingListItem) error
+	}
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -52,5 +66,6 @@ func NewStorage(db *gorm.DB) Storage {
 		MeasurementUnits: &MeasurementRepository{db},
 		FoodGroups:       &FoodGroupRepository{db},
 		Instructions:     &InstructionRepository{db},
+		ShoppingLists:    &ShoppingListRepository{db},
 	}
 }

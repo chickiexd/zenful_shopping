@@ -36,6 +36,20 @@ func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, created_ingredient)
 }
 
+func (h *IngredientHandler) AddToShoppingList(w http.ResponseWriter, r *http.Request) {
+	var ingredient dto.AddIngredientToShoppingListRequest
+	if err := utils.ReadJSON(w, r, &ingredient); err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	err := h.service.Ingredients.AddToShoppingList(&ingredient)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSON(w, http.StatusOK, "Ingredient added to shopping list")
+}
+
 // func (h *RecipeHandler) Create(c *gin.Context, recipe *CreateRecipeRequest) {
 // 	var recipe store.Recipe
 // 	if err := c.ShouldBindJSON(&recipe); err != nil {

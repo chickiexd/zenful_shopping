@@ -61,3 +61,7 @@ type recipeRequest struct {
 	Public      bool   `json:"public"`
 	MealType    int    `json:"meal_type"`
 }
+
+type AddRecipeToShoppingListRequest struct {
+	RecipeID uint `json:"recipe_id"`
+}

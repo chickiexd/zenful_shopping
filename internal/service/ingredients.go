@@ -134,3 +134,17 @@ func convert_store_to_dto_ingredient(ingredient *store.Ingredient) *dto.Ingredie
 	}
 	return ingredient_response
 }
+
+func (s *ingredientService) AddToShoppingList(ingredient *dto.AddIngredientToShoppingListRequest) error {
+	item := &store.ShoppingListItem{
+		IngredientID:      ingredient.IngredientID,
+		MeasurementUnitID: ingredient.MeasurementUnitID,
+		Quantity:          ingredient.Quantity,
+		ShoppingListID:    ingredient.ShoppingListID,
+	}
+	err := s.storage.ShoppingLists.CreateItemAssociation(item)
+	if err != nil {
+		return err
+	}
+	return nil
+}

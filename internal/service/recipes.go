@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"os"
 	"zenful_shopping_backend/internal/dto"
 	"zenful_shopping_backend/internal/store"
@@ -118,8 +119,8 @@ func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {
 		for j, instr := range recipe.Instructions {
 			instructions[j] = dto.InstructionResponse{
 				InstructionID: instr.InstructionID,
-				Description: instr.Description,
-				StepNumber:  instr.StepNumber,
+				Description:   instr.Description,
+				StepNumber:    instr.StepNumber,
 			}
 		}
 		ingredients := make([]dto.RecipeIngredientResponse, len(recipe.RecipeIngredients))
@@ -146,4 +147,108 @@ func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {
 		}
 	}
 	return recipes_response, err
+}
+
+func (s *recipeService) AddToShoppingList(recipe_id uint) error {
+	err := s.storage.DB.Transaction(func(tx *gorm.DB) error {
+		shoppingListRepo := s.storage.ShoppingLists.WithTransaction(tx)
+
+		recipe, err := s.storage.Recipes.GetByID(recipe_id)
+		if err != nil {
+			return err
+		}
+		for _, ing := range recipe.RecipeIngredients {
+			food_groups, err := s.storage.Ingredients.GetFoodGroupsByID(ing.IngredientID)
+			if err != nil {
+				return err
+			}
+			for _, food_group := range food_groups {
+				shopping_list, err := shoppingListRepo.GetByFoodGroupID(food_group.FoodGroupID)
+				if err != nil {
+					return err
+				}
+				if len(shopping_list) != 1 {
+					log.Println("0 or more than 1 shoppinlist found for: ", food_group.Name)
+				} else {
+					items, err := shoppingListRepo.GetItemsByIngredientID(ing.IngredientID)
+					if err != nil {
+						return err
+					}
+					if len(items) > 1 {
+						log.Println("more than 1 ingredient entry found in shoppinglist for: ", ing.IngredientID)
+						return err
+					}
+					if len(items) == 0 {
+						item := &store.ShoppingListItem{
+							IngredientID:      ing.IngredientID,
+							MeasurementUnitID: ing.MeasurementUnitID,
+							Quantity:          ing.Quantity,
+							ShoppingListID:    shopping_list[0].ShoppingListID,
+						}
+						if err := shoppingListRepo.CreateItemAssociation(item); err != nil {
+							return err
+						}
+					} else {
+						item := items[0]
+						// TODO check for different measurement units
+						item.Quantity += ing.Quantity
+						if err := shoppingListRepo.UpdateItemAssociation(&item); err != nil {
+							return err
+						}
+					}
+					break
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println("Error adding to shopping list: ", err)
+		return err
+	}
+	return nil
+}
+
+func (s *recipeService) RemoveFromShoppingList(recipe_id uint) error {
+	err := s.storage.DB.Transaction(func(tx *gorm.DB) error {
+		shoppingListRepo := s.storage.ShoppingLists.WithTransaction(tx)
+
+		recipe, err := s.storage.Recipes.GetByID(recipe_id)
+		if err != nil {
+			return err
+		}
+		for _, ing := range recipe.RecipeIngredients {
+			items, err := shoppingListRepo.GetItemsByIngredientID(ing.IngredientID)
+			if err != nil {
+				return err
+			}
+			if len(items) > 1 {
+				log.Println("more than 1 ingredient entry found in shoppinglist for: ", ing.IngredientID)
+				return err
+			}
+			if len(items) == 0 {
+				log.Println("0 items found in shoppinglist for: ", ing.IngredientID)
+				continue
+			} else {
+				item := items[0]
+				item.Quantity -= ing.Quantity
+				if item.Quantity <= 0 {
+					item.Quantity = 0
+					if err := shoppingListRepo.DeleteItemAssociation(&item); err != nil {
+						return err
+					}
+				} else {
+					if err := shoppingListRepo.UpdateItemAssociation(&item); err != nil {
+						return err
+					}
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println("Error removing from shopping list: ", err)
+		return err
+	}
+	return nil
 }

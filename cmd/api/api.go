@@ -50,6 +50,7 @@ func (app *application) mount() http.Handler {
 		r.Route("/ingredients", func(r chi.Router) {
 			r.Get("/", app.handler.Ingredients.GetAll)
 			r.Post("/create", app.handler.Ingredients.Create)
+			r.Post("/add", app.handler.Ingredients.AddToShoppingList)
 		})
 		r.Route("/measurement_units", func(r chi.Router) {
 			r.Get("/", app.handler.MeasurementUnits.GetAll)
@@ -63,9 +64,14 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.handler.Recipes.GetAll)
 			r.Post("/", app.handler.Recipes.Create)
 			r.Post("/parse", app.handler.ChatGPT.ParseRecipe)
+			r.Post("/add", app.handler.Recipes.AddToShoppingList)
+			r.Post("/remove", app.handler.Recipes.RemoveFromShoppingList)
 		})
 		r.Route("/images", func(r chi.Router) {
 			r.Get("/{filename}", app.handler.Images.Get)
+		})
+		r.Route("/shopping_lists", func(r chi.Router) {
+			r.Get("/", app.handler.ShoppingList.GetAll)
 		})
 	})
 
