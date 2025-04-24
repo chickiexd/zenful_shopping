@@ -30,4 +30,3 @@ CREATE TABLE ingredient_measurement_units (
     FOREIGN KEY (ingredient_id) REFERENCES ingredients (ingredient_id) ON DELETE CASCADE,
     FOREIGN KEY (measurement_unit_id) REFERENCES measurement_units (measurement_unit_id) ON DELETE CASCADE
 );
-
