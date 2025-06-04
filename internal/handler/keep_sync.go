@@ -3,8 +3,8 @@ package handler
 import (
 	// "log"
 	"net/http"
-	"zenful_shopping_backend/internal/service"
-	"zenful_shopping_backend/utils"
+	"github.com/chickiexd/zenful_shopping/internal/service"
+	"github.com/chickiexd/zenful_shopping/utils"
 )
 
 type KeepSyncHandler struct {

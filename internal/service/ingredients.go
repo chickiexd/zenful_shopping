@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	"zenful_shopping_backend/internal/dto"
-	"zenful_shopping_backend/internal/store"
+	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/store"
 
 	"gorm.io/gorm"
 )

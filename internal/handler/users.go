@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"zenful_shopping_backend/internal/service"
-	"zenful_shopping_backend/internal/store"
+	"github.com/chickiexd/zenful_shopping/internal/service"
+	"github.com/chickiexd/zenful_shopping/internal/store"
 	"github.com/gin-gonic/gin"
 )
 

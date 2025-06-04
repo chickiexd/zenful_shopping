@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"zenful_shopping_backend/internal/dto"
-	"zenful_shopping_backend/internal/service"
-	"zenful_shopping_backend/utils"
+	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/service"
+	"github.com/chickiexd/zenful_shopping/utils"
 
 	"github.com/go-chi/chi/v5"
 )

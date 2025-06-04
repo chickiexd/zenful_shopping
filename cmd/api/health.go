@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http"
-	"zenful_shopping_backend/utils"
+	"github.com/chickiexd/zenful_shopping/utils"
 )
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {

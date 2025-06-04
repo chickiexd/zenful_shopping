@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"zenful_shopping_backend/internal/service"
+	"github.com/chickiexd/zenful_shopping/internal/service"
 
 	"github.com/go-chi/chi/v5"
 )

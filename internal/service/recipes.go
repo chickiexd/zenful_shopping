@@ -3,9 +3,9 @@ package service
 import (
 	"log"
 	"os"
-	"zenful_shopping_backend/internal/dto"
-	"zenful_shopping_backend/internal/store"
-	"zenful_shopping_backend/utils"
+	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/store"
+	"github.com/chickiexd/zenful_shopping/utils"
 
 	"gorm.io/gorm"
 )

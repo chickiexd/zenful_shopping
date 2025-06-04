@@ -9,10 +9,10 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 	"gorm.io/gorm"
 
-	"zenful_shopping_backend/internal/dto"
-	"zenful_shopping_backend/internal/env"
-	"zenful_shopping_backend/internal/store"
-	"zenful_shopping_backend/utils"
+	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/env"
+	"github.com/chickiexd/zenful_shopping/internal/store"
+	"github.com/chickiexd/zenful_shopping/utils"
 )
 
 type OpenAIService struct {

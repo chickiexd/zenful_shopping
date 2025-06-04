@@ -2,14 +2,26 @@ package main
 
 import (
 	"log"
-	"zenful_shopping_backend/internal/db"
-	"zenful_shopping_backend/internal/env"
-	"zenful_shopping_backend/internal/handler"
-	"zenful_shopping_backend/internal/service"
-	"zenful_shopping_backend/internal/store"
+	"github.com/chickiexd/zenful_shopping/internal/db"
+	"github.com/chickiexd/zenful_shopping/internal/env"
+	"github.com/chickiexd/zenful_shopping/internal/handler"
+	"github.com/chickiexd/zenful_shopping/internal/service"
+	"github.com/chickiexd/zenful_shopping/internal/store"
 )
 
 const version = "0.0.1"
+
+// @title Zenful Shopping API
+// @description This is the API for Zenful Shopping, a platform to manage your recipes, ingredients and shopping lists.
+
+// @contact.name chickie
+// @contact.url chickiexd.com
+// @contact.email contact@chickiexd.com
+
+// @license.name MIT License
+// @license.url https://opensource.org/licenses/MIT
+
+// @BasePath /v1
 
 func main() {
 

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"zenful_shopping_backend/internal/service"
+	"github.com/chickiexd/zenful_shopping/internal/service"
 )
 
 type Handler struct {

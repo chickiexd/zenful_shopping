@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"zenful_shopping_backend/internal/store"
+	"github.com/chickiexd/zenful_shopping/internal/store"
 )
 
 type keepSyncService struct {

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"zenful_shopping_backend/internal/store"
+	"github.com/chickiexd/zenful_shopping/internal/store"
 )
 
 type userService struct {

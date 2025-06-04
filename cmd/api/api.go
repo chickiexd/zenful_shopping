@@ -1,24 +1,27 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
-	"zenful_shopping_backend/internal/handler"
+	"github.com/chickiexd/zenful_shopping/internal/handler"
+	// "github.com/chickiexd/zenful_shopping/docs"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type application struct {
-	config config
+	config  config
 	handler handler.Handler
 }
 
 type config struct {
 	addr string
 	db   dbConfig
-	env string
+	env  string
 }
 
 type dbConfig struct {
@@ -80,7 +83,6 @@ func (app *application) mount() http.Handler {
 		})
 	})
 
-
 	//recipes
 	//users
 	//ingredients
@@ -90,6 +92,9 @@ func (app *application) mount() http.Handler {
 }
 
 func (app *application) run(mux http.Handler) error {
+	// Docs
+	docs.SwaggerInfo.Version = version
+
 	srv := &http.Server{
 		Addr:         app.config.addr,
 		Handler:      mux,
