@@ -42,3 +42,9 @@ func (r *MeasurementRepository) GetByID(id uint) (*MeasurementUnit, error) {
 	err := r.db.First(&measurement, id).Error
 	return &measurement, err
 }
+
+func (r *MeasurementRepository) GetByName(name string) (*MeasurementUnit, error) {
+	var measurement MeasurementUnit
+	err := r.db.Where("name = ?", name).First(&measurement).Error
+	return &measurement, err
+}

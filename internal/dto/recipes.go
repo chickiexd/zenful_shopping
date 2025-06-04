@@ -3,18 +3,18 @@ package dto
 import "mime/multipart"
 
 type RecipeResponse struct {
-	RecipeID     uint                  `json:"recipe_id"`
-	Title        string                `json:"title"`
-	Description  string                `json:"description"`
-	Public       bool                  `json:"public"`
-	CookTime     int                   `json:"cook_time"`
-	Servings     int                   `json:"servings"`
-	ImagePath    string                `json:"image_path"`
-	MealType     uint                  `json:"meal_type"`
-	Ingredients  []RecipeIngredientResponse  `json:"ingredients"`
-	Instructions []InstructionResponse `json:"instructions"`
-	CreatedAt    string                `json:"created_at"`
-	UpdatedAt    string                `json:"updated_at"`
+	RecipeID     uint                       `json:"recipe_id"`
+	Title        string                     `json:"title"`
+	Description  string                     `json:"description"`
+	Public       bool                       `json:"public"`
+	CookTime     int                        `json:"cook_time"`
+	Servings     int                        `json:"servings"`
+	ImagePath    string                     `json:"image_path"`
+	MealType     uint                       `json:"meal_type"`
+	Ingredients  []RecipeIngredientResponse `json:"ingredients"`
+	Instructions []InstructionResponse      `json:"instructions"`
+	CreatedAt    string                     `json:"created_at"`
+	UpdatedAt    string                     `json:"updated_at"`
 }
 
 type RecipeIngredientResponse struct {
@@ -64,4 +64,46 @@ type recipeRequest struct {
 
 type AddRecipeToShoppingListRequest struct {
 	RecipeID uint `json:"recipe_id"`
+}
+
+// returned from the openai api
+type ParsedRecipeInformation struct {
+	Recipe       recipeRequest           `json:"recipe" form:"recipe"`
+	Ingredients  []IngredientInformation `json:"ingredients"`
+	Instructions []instructionRequest    `json:"instructions"`
+}
+
+type IngredientInformation struct {
+	Name            string  `json:"name"`
+	Quantity        float64 `json:"quantity"`
+	MeasurementUnit string  `json:"measurement_unit"`
+}
+
+type ParsedIngredientInformation struct {
+	IngredientName        string   `json:"ingredient_name"`
+	IngredientDescription string   `json:"ingredient_description"`
+	MeasurementUnits      []string `json:"measurement_units"`
+	FoodGroups            []string `json:"food_groups"`
+}
+
+// returned to the client
+type ParsedRecipe struct {
+	Recipe         recipeRequest              `json:"recipe" form:"recipe"`
+	Ingredients    []RecipeIngredientResponse `json:"ingredients"`
+	Instructions   []instructionRequest       `json:"instructions"`
+	NewIngredients []ParsedIngredient         `json:"new_ingredients"`
+	NewFoodGrops   []ParsedFoodGroup          `json:"new_food_groups"`
+}
+
+type ParsedIngredient struct {
+	Name                 string            `json:"name"`
+	Quantity             float64           `json:"quantity"`
+	MeasurementUnitNames []string          `json:"measurement_unit_names"`
+	MeasurementUnitID    uint              `json:"measurement_unit_id"`
+	ParsedFoodGroups     []ParsedFoodGroup `json:"food_groups"`
+}
+
+type ParsedFoodGroup struct {
+	Name          string `json:"name"`
+	ShoppingLists string `json:"shopping_list"`
 }

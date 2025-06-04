@@ -7,10 +7,11 @@ import (
 )
 
 type ShoppingList struct {
-	ShoppingListID uint `gorm:"primaryKey"`
+	ShoppingListID uint      `gorm:"primaryKey"`
 	Name           string    `gorm:"not null"`
 	CreatedAt      time.Time `gorm:"autoCreateTime"`
 	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
+	FoodGroups     []FoodGroup `gorm:"many2many:shopping_list_food_groups;joinForeignKey:ShoppingListID;joinReferences:FoodGroupID"`
 }
 
 type ShoppingListItem struct {
@@ -24,15 +25,6 @@ type ShoppingListItem struct {
 	MeasurementUnit    MeasurementUnit `gorm:"foreignKey:MeasurementUnitID"`
 	CreatedAt          time.Time       `gorm:"autoCreateTime"`
 	UpdatedAt          time.Time       `gorm:"autoUpdateTime"`
-}
-
-type ShoppingListFoodGroup struct {
-	ShoppingListID uint         `gorm:"primaryKey"`
-	FoodGroupID    uint         `gorm:"primaryKey"`
-	ShoppingList   ShoppingList `gorm:"foreignKey:ShoppingListID"`
-	FoodGroup      FoodGroup    `gorm:"foreignKey:FoodGroupID"`
-	CreatedAt      time.Time    `gorm:"autoCreateTime"`
-	UpdatedAt      time.Time    `gorm:"autoUpdateTime"`
 }
 
 type ShoppingListRepository struct {
@@ -55,6 +47,15 @@ func (r *ShoppingListRepository) Create(shopping_list *ShoppingList) error {
 		return err
 	}
 	return nil
+}
+
+func (r *ShoppingListRepository) GetByID(id uint) (*ShoppingList, error) {
+	var shoppingList ShoppingList
+	err := r.db.First(&shoppingList, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &shoppingList, nil
 }
 
 func (r *ShoppingListRepository) CreateFoodGroupAssociation(shopping_list *ShoppingList, foodGroup *FoodGroup) error {
@@ -122,47 +123,16 @@ func (r *ShoppingListRepository) UpdateItemAssociation(shopping_list_item *Shopp
 	return nil
 }
 
-// func (r *ShoppingListRepository) GetByID(id uint) (*ShoppingList, error) {
-// 	var ingredient ShoppingList
-// 	err := r.db.First(&ingredient, id).Error
-// 	return &ingredient, err
-// }
-//
-// func (r *ShoppingListRepository) GetByName(name string) (*ShoppingList, error) {
-// 	var ingredient ShoppingList
-// 	err := r.db.Where("name = ?", name).First(&ingredient).Error
-// 	return &ingredient, err
-// }
-//
-// func (r *ShoppingListRepository) GetAll() ([]ShoppingList, error) {
-// 	var ingredients []ShoppingList
-// 	err := r.db.
-// 		Preload("FoodGroups").
-// 		Preload("MeasurementUnits").
-// 		Find(&ingredients).Error
-// 	return ingredients, err
-// }
-//
-// func (r *ShoppingListRepository) GetFoodGroupsByID(id uint) ([]FoodGroup, error) {
-// 	var foodGroups []FoodGroup
-//
-// 	if err := r.db.Joins("JOIN ingredient_food_groups ON food_groups.food_group_id = ingredient_food_groups.food_group_id").
-// 		Where("ingredient_food_groups.ingredient_id = ?", id).
-// 		Find(&foodGroups).Error; err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return foodGroups, nil
-// }
-//
-// func (r *ShoppingListRepository) GetMeasurementUnitsByID(id uint) ([]MeasurementUnit, error) {
-// 	var measurementUnits []MeasurementUnit
-//
-// 	if err := r.db.Joins("JOIN ingredient_measurement_units ON measurement_units.measurement_unit_id = ingredient_measurement_units.measurement_unit_id").
-// 		Where("ingredient_measurement_units.ingredient_id = ?", id).
-// 		Find(&measurementUnits).Error; err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return measurementUnits, nil
-// }
+func (r *ShoppingListRepository) DeleteItemAssociationByID(id uint) error {
+	if err := r.db.Delete(&ShoppingListItem{}, id).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ShoppingListRepository) DeleteAllItemsByShoppingListID(id uint) error {
+	if err := r.db.Where("shopping_list_id = ?", id).Delete(&ShoppingListItem{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

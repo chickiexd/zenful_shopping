@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"log"
 	"zenful_shopping_backend/internal/service"
 	"zenful_shopping_backend/utils"
 )
@@ -22,8 +23,11 @@ func (h *ChatGPTHandler) ParseRecipe(w http.ResponseWriter, r *http.Request) {
 
 	parsed_recipe, err := h.service.ChatGPT.ParseRecipe(submitted_recipe.Text)
 	if err != nil {
+		log.Println("Error parsing recipe: ", err)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	log.Println("Parsed recipe: ", parsed_recipe)
 	utils.WriteJSON(w, http.StatusOK, parsed_recipe)
 }
 

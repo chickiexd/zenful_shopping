@@ -64,7 +64,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.handler.Recipes.GetAll)
 			r.Post("/", app.handler.Recipes.Create)
 			r.Post("/parse", app.handler.ChatGPT.ParseRecipe)
-			r.Post("/add", app.handler.Recipes.AddToShoppingList)
+			r.Post("/add/{id}", app.handler.Recipes.AddToShoppingList)
 			r.Post("/remove", app.handler.Recipes.RemoveFromShoppingList)
 		})
 		r.Route("/images", func(r chi.Router) {
@@ -72,6 +72,11 @@ func (app *application) mount() http.Handler {
 		})
 		r.Route("/shopping_lists", func(r chi.Router) {
 			r.Get("/", app.handler.ShoppingList.GetAll)
+			r.Post("/remove_item", app.handler.ShoppingList.RemoveItemFromShoppingList)
+			r.Post("/remove_all_items", app.handler.ShoppingList.RemoveAllItemsFromShoppingList)
+		})
+		r.Route("/sync", func(r chi.Router) {
+			r.Get("/", app.handler.KeepSync.SyncShoppingLists)
 		})
 	})
 

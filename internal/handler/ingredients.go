@@ -42,12 +42,12 @@ func (h *IngredientHandler) AddToShoppingList(w http.ResponseWriter, r *http.Req
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	err := h.service.Ingredients.AddToShoppingList(&ingredient)
+	item, err := h.service.Ingredients.AddToShoppingList(&ingredient)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, "Ingredient added to shopping list")
+	utils.WriteJSON(w, http.StatusOK, item)
 }
 
 // func (h *RecipeHandler) Create(c *gin.Context, recipe *CreateRecipeRequest) {

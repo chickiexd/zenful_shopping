@@ -37,3 +37,20 @@ func (s *ShoppingListService) GetAll() ([]dto.ShoppingListResponse, error) {
 	}
 	return shopping_list_dto, nil
 }
+
+func (s *ShoppingListService) RemoveItemFromShoppingList(shopping_list_item_id uint) error {
+	err := s.storage.ShoppingLists.DeleteItemAssociationByID(shopping_list_item_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ShoppingListService) RemoveAllItemsFromShoppingList(shopping_list_id uint) error {
+	err := s.storage.ShoppingLists.DeleteAllItemsByShoppingListID(shopping_list_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+

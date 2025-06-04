@@ -26,12 +26,14 @@ type Storage struct {
 		Create(*MeasurementUnit) error
 		GetAll() ([]MeasurementUnit, error)
 		GetByID(uint) (*MeasurementUnit, error)
+		GetByName(string) (*MeasurementUnit, error)
 	}
 	FoodGroups interface {
 		WithTransaction(*gorm.DB) *FoodGroupRepository
 		Create(*FoodGroup) error
 		GetAll() ([]FoodGroup, error)
 		GetByID(uint) (*FoodGroup, error)
+		GetByName(string) (*FoodGroup, error)
 	}
 	Users interface {
 		Create(context.Context, *User) error
@@ -54,6 +56,8 @@ type Storage struct {
 		CreateItemAssociation(*ShoppingListItem) error
 		DeleteItemAssociation(*ShoppingListItem) error
 		UpdateItemAssociation(*ShoppingListItem) error
+		DeleteItemAssociationByID(uint) error
+		DeleteAllItemsByShoppingListID(uint) error
 	}
 }
 

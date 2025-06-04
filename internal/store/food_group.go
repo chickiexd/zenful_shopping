@@ -43,3 +43,9 @@ func (r *FoodGroupRepository) GetByID(id uint) (*FoodGroup, error) {
 	err := r.db.First(&food_group, id).Error
 	return &food_group, err
 }
+
+func (r *FoodGroupRepository) GetByName(name string) (*FoodGroup, error) {
+	var food_group FoodGroup
+	err := r.db.Where("name = ?", name).First(&food_group).Error
+	return &food_group, err
+}

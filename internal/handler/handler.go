@@ -22,18 +22,22 @@ type Handler struct {
 		Create(http.ResponseWriter, *http.Request)
 	}
 	FoodGroups interface {
-		// Create(context.Context, *CreateRecipeRequest) error
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
 	}
 	ShoppingList interface {
 		GetAll(http.ResponseWriter, *http.Request)
+		RemoveItemFromShoppingList(http.ResponseWriter, *http.Request)
+		RemoveAllItemsFromShoppingList(http.ResponseWriter, *http.Request)
 	}
 	ChatGPT interface {
 		ParseRecipe(http.ResponseWriter, *http.Request)
 	}
 	Images interface {
 		Get(http.ResponseWriter, *http.Request)
+	}
+	KeepSync interface {
+		SyncShoppingLists(http.ResponseWriter, *http.Request)
 	}
 }
 
@@ -46,6 +50,7 @@ func NewHandler(service *service.Service) Handler {
 		ChatGPT:          &ChatGPTHandler{service},
 		Images:           &ImageHandler{service},
 		ShoppingList:     &ShoppingListHandler{service},
+		KeepSync:         &KeepSyncHandler{service},
 		// Users:   &userHandler{service},
 	}
 }

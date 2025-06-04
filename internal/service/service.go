@@ -17,29 +17,34 @@ type Service struct {
 		Create(*dto.CreateIngredientRequest) (*dto.IngredientResponse, error)
 		GetByID(uint) (*dto.IngredientResponse, error)
 		GetAll() ([]dto.IngredientResponse, error)
-		AddToShoppingList(*dto.AddIngredientToShoppingListRequest) error
+		AddToShoppingList(*dto.AddIngredientToShoppingListRequest) (*dto.ShoppingListItemResponse, error)
 	}
 	MeasurmentUnits interface {
 		Create(*dto.CreateMeasurementUnit) error
 		GetAll() ([]store.MeasurementUnit, error)
 	}
 	FoodGroups interface {
-		Create(*dto.CreateFoodGroup) error
+		Create(*dto.CreateFoodGroupRequest) (*store.FoodGroup, error)
 		GetAll() ([]store.FoodGroup, error)
 	}
 	Users interface {
 		Create(context.Context, *store.User) error
 	}
 	ChatGPT interface {
-		ParseRecipe(string) (*dto.CreateRecipeRequest, error)
+		ParseRecipe(string) (*dto.ParsedRecipe, error)
 	}
 	ShoppingList interface {
 		GetAll() ([]dto.ShoppingListResponse, error)
+		RemoveItemFromShoppingList(uint) error
+		RemoveAllItemsFromShoppingList(uint) error
+	}
+	KeepSync interface {
+		SyncShoppingLists() error
 	}
 }
 
 func NewService(store *store.Storage) Service {
-	openAIService := NewOpenAIService()
+	openAIService := NewOpenAIService(store)
 	return Service{
 		Recipes:         &recipeService{store},
 		Users:           &userService{store},
@@ -47,6 +52,7 @@ func NewService(store *store.Storage) Service {
 		MeasurmentUnits: &MeasurementUnitService{store},
 		FoodGroups:      &FoodGroupService{store},
 		ShoppingList:    &ShoppingListService{store},
+		KeepSync:        &keepSyncService{store},
 		ChatGPT:         openAIService,
 	}
 }

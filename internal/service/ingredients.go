@@ -19,60 +19,54 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*dt
 		measurementUnitsRepo := s.storage.MeasurementUnits.(*store.MeasurementRepository).WithTransaction(tx)
 		foodGroupsRepo := s.storage.FoodGroups.(*store.FoodGroupRepository).WithTransaction(tx)
 
-		var measurement *store.MeasurementUnit
-		if ingredient.Measurement.MeasurementUnitID == 0 {
-			if ingredient.Measurement.Name == "" {
-				return fmt.Errorf("measurement name cannot be empty")
-			}
-			measurement = &store.MeasurementUnit{Name: ingredient.Measurement.Name}
-			if err := measurementUnitsRepo.Create(measurement); err != nil {
-				return err
-			}
-		} else {
-			result, err := measurementUnitsRepo.GetByID(ingredient.Measurement.MeasurementUnitID)
-			if err != nil {
-				return err
-			}
-			measurement = result
+		created_ingredient = &store.Ingredient{
+			Name: ingredient.Name,
 		}
-
-		var food_group *store.FoodGroup
-		if ingredient.FoodGroup.FoodGroupID == 0 {
-			if ingredient.FoodGroup.Name == "" {
-				return fmt.Errorf("food group name cannot be empty")
-			}
-			food_group = &store.FoodGroup{Name: ingredient.FoodGroup.Name}
-			if err := foodGroupsRepo.Create(food_group); err != nil {
-				return err
-			}
-		} else {
-			result, err := foodGroupsRepo.GetByID(ingredient.FoodGroup.FoodGroupID)
-			if err != nil {
-				return err
-			}
-			food_group = result
-		}
-
-		if ingredient.IngredientID == 0 {
-			created_ingredient = &store.Ingredient{
-				Name: ingredient.Name,
-			}
-			if err := ingredientsRepo.Create(created_ingredient); err != nil {
-				return err
-			}
-		} else {
-			result, err := ingredientsRepo.GetByID(ingredient.IngredientID)
-			if err != nil {
-				return err
-			}
-			created_ingredient = result
-		}
-
-		if err := ingredientsRepo.CreateMeasurementUnitAssociation(created_ingredient, measurement); err != nil {
+		if err := ingredientsRepo.Create(created_ingredient); err != nil {
 			return err
 		}
-		if err := ingredientsRepo.CreateFoodGroupAssociation(created_ingredient, food_group); err != nil {
-			return err
+
+		for _, new_measurement := range ingredient.Measurements {
+			var measurement *store.MeasurementUnit
+			if new_measurement.MeasurementUnitID == 0 {
+				if new_measurement.Name == "" {
+					return fmt.Errorf("measurement name cannot be empty")
+				}
+				measurement = &store.MeasurementUnit{Name: new_measurement.Name}
+				if err := measurementUnitsRepo.Create(measurement); err != nil {
+					return err
+				}
+			} else {
+				result, err := measurementUnitsRepo.GetByID(new_measurement.MeasurementUnitID)
+				if err != nil {
+					return err
+				}
+				measurement = result
+			}
+			if err := ingredientsRepo.CreateMeasurementUnitAssociation(created_ingredient, measurement); err != nil {
+				return err
+			}
+		}
+
+		for _, new_food_group := range ingredient.FoodGroups {
+			var food_group *store.FoodGroup
+			result, err := foodGroupsRepo.GetByName(new_food_group)
+			if err != nil && err == gorm.ErrRecordNotFound {
+				if new_food_group == "" {
+					return fmt.Errorf("food group name cannot be empty")
+				}
+				food_group = &store.FoodGroup{Name: new_food_group}
+				if err := foodGroupsRepo.Create(food_group); err != nil {
+					return err
+				}
+			} else if err != nil {
+				return err
+			} else {
+				food_group = result
+			}
+			if err := ingredientsRepo.CreateFoodGroupAssociation(created_ingredient, food_group); err != nil {
+				return err
+			}
 		}
 
 		if err := tx.Preload("MeasurementUnits").Preload("FoodGroups").First(&created_ingredient, created_ingredient.IngredientID).Error; err != nil {
@@ -85,7 +79,6 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*dt
 	}
 
 	created_ingredient_response := convert_store_to_dto_ingredient(created_ingredient)
-
 	return created_ingredient_response, nil
 }
 
@@ -135,7 +128,7 @@ func convert_store_to_dto_ingredient(ingredient *store.Ingredient) *dto.Ingredie
 	return ingredient_response
 }
 
-func (s *ingredientService) AddToShoppingList(ingredient *dto.AddIngredientToShoppingListRequest) error {
+func (s *ingredientService) AddToShoppingList(ingredient *dto.AddIngredientToShoppingListRequest) (*dto.ShoppingListItemResponse, error) {
 	item := &store.ShoppingListItem{
 		IngredientID:      ingredient.IngredientID,
 		MeasurementUnitID: ingredient.MeasurementUnitID,
@@ -144,7 +137,14 @@ func (s *ingredientService) AddToShoppingList(ingredient *dto.AddIngredientToSho
 	}
 	err := s.storage.ShoppingLists.CreateItemAssociation(item)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	ingredient_response := &dto.ShoppingListItemResponse{
+		ShoppingListID:     item.ShoppingListID,
+		ShoppingListItemID: item.ShoppingListItemID,
+		IngredientID:       item.IngredientID,
+		Quantity:           item.Quantity,
+		MeasurementUnitID:  item.MeasurementUnitID,
+	}
+	return ingredient_response, nil
 }

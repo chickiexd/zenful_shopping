@@ -3,9 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"zenful_shopping_backend/internal/dto"
 	"zenful_shopping_backend/internal/service"
 	"zenful_shopping_backend/utils"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type RecipeHandler struct {
@@ -21,14 +24,30 @@ func (h *RecipeHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RecipeHandler) AddToShoppingList(w http.ResponseWriter, r *http.Request) {
-	var recipe_id dto.AddRecipeToShoppingListRequest
-	err := utils.ReadJSON(w, r, &recipe_id)
+	recipeIDStr := chi.URLParam(r, "id")
+
+	parsedID, err := strconv.ParseUint(recipeIDStr, 10, 64)
 	if err != nil {
-		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
+		http.Error(w, "Invalid recipe ID", http.StatusBadRequest)
+		return
 	}
-	err = h.service.Recipes.AddToShoppingList(recipe_id.RecipeID)
-	utils.WriteJSON(w, http.StatusOK, recipe_id)
+	recipeID := uint(parsedID)
+
+	if err := h.service.Recipes.AddToShoppingList(recipeID); err != nil {
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.WriteJSON(w, http.StatusOK, recipeID)
 }
+
+// var recipe_id dto.AddRecipeToShoppingListRequest
+// err := utils.ReadJSON(w, r, &recipe_id)
+// if err != nil {
+// 	utils.WriteJSONError(w, http.StatusNotFound, err.Error())
+// }
+// err = h.service.Recipes.AddToShoppingList(recipe_id.RecipeID)
+// utils.WriteJSON(w, http.StatusOK, recipe_id)
+// }
 
 func (h *RecipeHandler) RemoveFromShoppingList(w http.ResponseWriter, r *http.Request) {
 	var recipe_id dto.AddRecipeToShoppingListRequest

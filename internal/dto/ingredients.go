@@ -1,11 +1,11 @@
 package dto
 
 type CreateIngredientRequest struct {
-	IngredientID uint                  `json:"ingredient_id"`
-	Name         string                `json:"name"`
-	Description  string                `json:"description"`
-	Measurement  CreateMeasurementUnit `json:"measurement_unit"`
-	FoodGroup    CreateFoodGroup       `json:"food_group"`
+	IngredientID uint                    `json:"ingredient_id"`
+	Name         string                  `json:"name"`
+	Description  string                  `json:"description"`
+	Measurements []CreateMeasurementUnit `json:"measurement_units"`
+	FoodGroups   []string                `json:"food_groups"`
 }
 
 type IngredientResponse struct {
