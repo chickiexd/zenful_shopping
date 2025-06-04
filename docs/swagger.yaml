@@ -1,0 +1,204 @@
+basePath: /v1
+definitions:
+  dto.AddRecipeToShoppingListRequest:
+    properties:
+      recipe_id:
+        type: integer
+    type: object
+  dto.InstructionResponse:
+    properties:
+      description:
+        type: string
+      instruction_id:
+        type: integer
+      step_number:
+        type: integer
+    type: object
+  dto.RecipeIngredientResponse:
+    properties:
+      ingredient_id:
+        type: integer
+      measurement_unit_id:
+        type: integer
+      quantity:
+        type: number
+    type: object
+  dto.RecipeResponse:
+    properties:
+      cook_time:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      image_path:
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/dto.RecipeIngredientResponse'
+        type: array
+      instructions:
+        items:
+          $ref: '#/definitions/dto.InstructionResponse'
+        type: array
+      meal_type:
+        type: integer
+      public:
+        type: boolean
+      recipe_id:
+        type: integer
+      servings:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+info:
+  contact:
+    email: contact@chickiexd.com
+    name: chickie
+    url: chickiexd.com
+  description: This is the API for Zenful Shopping, a platform to manage your recipes,
+    ingredients and shopping lists.
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  title: Zenful Shopping API
+paths:
+  /recipes:
+    get:
+      consumes:
+      - application/json
+      description: Get all recipes from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.RecipeResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get all recipes
+      tags:
+      - recipes
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts multipart/form-data with JSON fields and an image to create
+        a new recipe
+      parameters:
+      - description: Recipe JSON string
+        in: formData
+        name: recipe
+        required: true
+        type: string
+      - description: Ingredients JSON array
+        in: formData
+        name: ingredients
+        required: true
+        type: string
+      - description: Instructions JSON array
+        in: formData
+        name: instructions
+        required: true
+        type: string
+      - description: Recipe image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: Recipe created successfully
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create a new recipe
+      tags:
+      - recipes
+  /recipes/add/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Add a recipe to the shopping list by its ID
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recipe ID
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Add a recipe to the shopping list
+      tags:
+      - recipes
+  /recipes/remove:
+    post:
+      consumes:
+      - application/json
+      description: Remove a recipe from the shopping list by its ID
+      parameters:
+      - description: Recipe ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddRecipeToShoppingListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AddRecipeToShoppingListRequest'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Remove a recipe from the shopping list
+      tags:
+      - recipes
+swagger: "2.0"

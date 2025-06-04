@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 	"github.com/chickiexd/zenful_shopping/internal/handler"
-	// "github.com/chickiexd/zenful_shopping/docs"
+	"github.com/chickiexd/zenful_shopping/docs"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,6 +20,7 @@ type application struct {
 
 type config struct {
 	addr string
+	apiURL string
 	db   dbConfig
 	env  string
 }
@@ -50,6 +51,10 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
+
 		r.Route("/ingredients", func(r chi.Router) {
 			r.Get("/", app.handler.Ingredients.GetAll)
 			r.Post("/create", app.handler.Ingredients.Create)
@@ -83,17 +88,13 @@ func (app *application) mount() http.Handler {
 		})
 	})
 
-	//recipes
-	//users
-	//ingredients
-	//auth
-
 	return r
 }
 
 func (app *application) run(mux http.Handler) error {
-	// Docs
 	docs.SwaggerInfo.Version = version
+	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.BasePath = "/v1"
 
 	srv := &http.Server{
 		Addr:         app.config.addr,

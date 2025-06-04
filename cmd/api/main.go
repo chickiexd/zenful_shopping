@@ -1,32 +1,33 @@
 package main
 
 import (
-	"log"
 	"github.com/chickiexd/zenful_shopping/internal/db"
 	"github.com/chickiexd/zenful_shopping/internal/env"
 	"github.com/chickiexd/zenful_shopping/internal/handler"
 	"github.com/chickiexd/zenful_shopping/internal/service"
 	"github.com/chickiexd/zenful_shopping/internal/store"
+	"log"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
-// @title Zenful Shopping API
-// @description This is the API for Zenful Shopping, a platform to manage your recipes, ingredients and shopping lists.
+//	@title			Zenful Shopping API
+//	@description	This is the API for Zenful Shopping, a platform to manage your recipes, ingredients and shopping lists.
 
-// @contact.name chickie
-// @contact.url chickiexd.com
-// @contact.email contact@chickiexd.com
+//	@contact.name	chickie
+//	@contact.url	chickiexd.com
+//	@contact.email	contact@chickiexd.com
 
-// @license.name MIT License
-// @license.url https://opensource.org/licenses/MIT
+//	@license.name	MIT License
+//	@license.url	https://opensource.org/licenses/MIT
 
-// @BasePath /v1
+//	@BasePath	/v1
 
 func main() {
 
 	cfg := config{
-		addr: env.GetString("ADDR", ":8080"),
+		addr:   env.GetString("ADDR", ":8080"),
+		apiURL: env.GetString("API_URL", "http://localhost:8080"),
 		db: dbConfig{
 			host:     env.GetString("DB_HOST", "localhost"),
 			user:     env.GetString("DB_USER", "user"),
