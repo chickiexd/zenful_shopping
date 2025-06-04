@@ -3,8 +3,6 @@ import gkeepapi
 import json
 import sys
 
-from dotenv import load_dotenv
-
 
 def get_node(title, keep):
     gnotes = keep.find(func=lambda x: x.title == title)
@@ -58,7 +56,6 @@ def update_note(note, ingredients):
 
 
 def sync(data):
-    load_dotenv()
     username = os.getenv("GOOGLE_USERNAME")
     master_token = os.getenv("GOOGLE_TOKEN")
     if not master_token:
