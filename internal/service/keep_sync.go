@@ -1,16 +1,12 @@
 package service
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/json"
-	// "log"
+	"fmt"
 	"os"
 	"os/exec"
-	// "zenful_shopping_backend/internal/dto"
 	"zenful_shopping_backend/internal/store"
-	// "zenful_shopping_backend/utils"
-	// "gorm.io/gorm"
 )
 
 type keepSyncService struct {
@@ -24,7 +20,7 @@ type ShoppingListSyncData struct {
 }
 
 type IngredientSyncData struct {
-	Name     string  `json:"name"`
+	Name     string `json:"name"`
 	Quantity string `json:"quantity"`
 }
 
@@ -41,16 +37,15 @@ func (s *keepSyncService) prepareData() ([]ShoppingListSyncData, error) {
 		}
 		var ingredientsData []IngredientSyncData
 		for _, item := range sl_items {
-			// Fetch the ingredient name from the Ingredient table
 			ingredient, err := s.storage.Ingredients.GetByID(item.IngredientID)
 			if err != nil {
 				return nil, err
 			}
-			// fetch measurement unit
 			measurementUnit, err := s.storage.MeasurementUnits.GetByID(item.MeasurementUnitID)
 			if err != nil {
 				return nil, err
 			}
+			// TODO: use abbreviation for measurement unit
 			ingredientData := IngredientSyncData{
 				Name:     ingredient.Name,
 				Quantity: fmt.Sprintf("%g %s", item.Quantity, measurementUnit.Name),
@@ -65,18 +60,13 @@ func (s *keepSyncService) prepareData() ([]ShoppingListSyncData, error) {
 		syncData = append(syncData, listData)
 	}
 	return syncData, nil
-
 }
 
 func (s *keepSyncService) SyncShoppingLists() error {
-
 	data, err := s.prepareData()
-
 	pythonPath := "./scripts/.venv/bin/python3"
 	scriptPath := "./scripts/keep_updater.py"
-
 	jsonData, _ := json.Marshal(data)
-
 	cmd := exec.Command(pythonPath, scriptPath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
