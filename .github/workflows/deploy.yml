@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Docker container with env vars
         run: |
-          docker run -d --name zenful_shopping \
+          docker run -d --network host --name zenful_shopping \
             -p 8080:8080 \
             -e ADDR=${{ secrets.ADDR }} \
             -e DB_HOST=${{ secrets.DB_HOST}} \
