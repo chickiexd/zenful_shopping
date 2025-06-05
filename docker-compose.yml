@@ -19,3 +19,5 @@ services:
 networks:
   nginx_net:
     external: true
+  zenful_shopping_net:
+    external: true
