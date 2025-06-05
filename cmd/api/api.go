@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
-	"github.com/chickiexd/zenful_shopping/internal/handler"
+
 	"github.com/chickiexd/zenful_shopping/docs"
+	"github.com/chickiexd/zenful_shopping/internal/handler"
+	"github.com/chickiexd/zenful_shopping/internal/logger"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -19,10 +20,10 @@ type application struct {
 }
 
 type config struct {
-	addr string
+	addr   string
 	apiURL string
-	db   dbConfig
-	env  string
+	db     dbConfig
+	env    string
 }
 
 type dbConfig struct {
@@ -104,7 +105,7 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("Server has started at %s", app.config.addr)
+	logger.Log.Infow("Server has started", "addr", app.config.addr, "env", app.config.env)
 
 	return srv.ListenAndServe()
 }

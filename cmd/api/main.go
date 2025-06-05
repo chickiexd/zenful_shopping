@@ -4,9 +4,9 @@ import (
 	"github.com/chickiexd/zenful_shopping/internal/db"
 	"github.com/chickiexd/zenful_shopping/internal/env"
 	"github.com/chickiexd/zenful_shopping/internal/handler"
+	"github.com/chickiexd/zenful_shopping/internal/logger"
 	"github.com/chickiexd/zenful_shopping/internal/service"
 	"github.com/chickiexd/zenful_shopping/internal/store"
-	"log"
 )
 
 const version = "0.0.2"
@@ -41,11 +41,14 @@ func main() {
 		env: env.GetString("ENV", "dev"),
 	}
 
+	logger.Init()
+	defer logger.Sync()
+
 	db, err := db.New(cfg.db.host, cfg.db.user, cfg.db.password, cfg.db.dbname, cfg.db.port)
 	if err != nil {
-		log.Panic(err)
+		logger.Log.Panic(err)
 	}
-	log.Println("db connection established")
+	logger.Log.Info("db connection established")
 
 	store := store.NewStorage(db)
 	service := service.NewService(&store)
@@ -58,5 +61,5 @@ func main() {
 
 	mux := app.mount()
 
-	log.Fatal(app.run(mux))
+	logger.Log.Fatal(app.run(mux))
 }

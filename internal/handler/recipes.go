@@ -2,11 +2,15 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/chickiexd/zenful_shopping/internal/dto"
-	"github.com/chickiexd/zenful_shopping/internal/service"
-	"github.com/chickiexd/zenful_shopping/utils"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/errors"
+	"github.com/chickiexd/zenful_shopping/internal/service"
+	"github.com/chickiexd/zenful_shopping/utils"
+	"gorm.io/gorm"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -30,7 +34,8 @@ type RecipeHandler struct {
 func (h *RecipeHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	recipes, err := h.service.Recipes.GetAll()
 	if err != nil {
-		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
+		errors.InternalServerError(w, r, err)
+		return
 	}
 	utils.WriteJSON(w, http.StatusOK, recipes)
 }
@@ -53,13 +58,17 @@ func (h *RecipeHandler) AddToShoppingList(w http.ResponseWriter, r *http.Request
 
 	parsedID, err := strconv.ParseUint(recipeIDStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid recipe ID", http.StatusBadRequest)
+		errors.BadRequest(w, r, err)
 		return
 	}
 	recipeID := uint(parsedID)
 
 	if err := h.service.Recipes.AddToShoppingList(recipeID); err != nil {
-		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		if err == gorm.ErrRecordNotFound {
+			errors.NotFound(w, r)
+			return
+		}
+		errors.InternalServerError(w, r, err)
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, recipeID)
@@ -82,9 +91,18 @@ func (h *RecipeHandler) RemoveFromShoppingList(w http.ResponseWriter, r *http.Re
 	var recipe_id dto.AddRecipeToShoppingListRequest
 	err := utils.ReadJSON(w, r, &recipe_id)
 	if err != nil {
-		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
+		errors.BadRequest(w, r, err)
+		return
 	}
 	err = h.service.Recipes.RemoveFromShoppingList(recipe_id.RecipeID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			errors.NotFound(w, r)
+			return
+		}
+		errors.InternalServerError(w, r, err)
+		return
+	}
 	utils.WriteJSON(w, http.StatusOK, recipe_id)
 }
 
@@ -107,30 +125,30 @@ func (h *RecipeHandler) RemoveFromShoppingList(w http.ResponseWriter, r *http.Re
 func (h *RecipeHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10MB max memory
 	if err != nil {
-		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		errors.BadRequest(w, r, err)
 		return
 	}
 
 	var req dto.CreateRecipeRequest
 
 	if err := json.Unmarshal([]byte(r.FormValue("recipe")), &req.Recipe); err != nil {
-		http.Error(w, "Invalid recipe field", http.StatusBadRequest)
+		errors.BadRequest(w, r, fmt.Errorf("invalid recipe field: %w", err))
 		return
 	}
 
 	if err := json.Unmarshal([]byte(r.FormValue("ingredients")), &req.Ingredients); err != nil {
-		http.Error(w, "Invalid ingredients field", http.StatusBadRequest)
+		errors.BadRequest(w, r, fmt.Errorf("invalid ingredients field: %w", err))
 		return
 	}
 
 	if err := json.Unmarshal([]byte(r.FormValue("instructions")), &req.Instructions); err != nil {
-		http.Error(w, "Invalid instructions field", http.StatusBadRequest)
+		errors.BadRequest(w, r, fmt.Errorf("invalid instructions field: %w", err))
 		return
 	}
 
 	file, fileHeader, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Error reading image", http.StatusBadRequest)
+		errors.BadRequest(w, r, fmt.Errorf("image file is required: %w", err))
 		return
 	}
 	defer file.Close()
