@@ -39,6 +39,7 @@ Godeps/
 *.temp
 
 # Go specific
+/bin/main
 *.test
 *.cover
 
