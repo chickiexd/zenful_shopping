@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/chickiexd/zenful_shopping/compare/v1.1.1...v1.1.2) (2025-06-05)
+
+
+### Bug Fixes
+
+* docker network set to host ([d8bdada](https://github.com/chickiexd/zenful_shopping/commit/d8bdada7270ef9fdbfeb27adaac71a7e501ffcfa))
+
 ## [1.1.1](https://github.com/chickiexd/zenful_shopping/compare/v1.1.0...v1.1.1) (2025-06-05)
 
 
