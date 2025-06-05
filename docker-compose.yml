@@ -15,9 +15,10 @@ services:
       - GOOGLE_USERNAME=${GOOGLE_USERNAME}
     networks:
       - nginx_net
+      - zenful_shopping
 
 networks:
   nginx_net:
     external: true
-  zenful_shopping_net:
+  zenful_shopping:
     external: true
