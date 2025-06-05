@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/chickiexd/zenful_shopping/compare/v1.0.0...v1.1.0) (2025-06-05)
+
+
+### Features
+
+* auto update api version ([1431c0c](https://github.com/chickiexd/zenful_shopping/commit/1431c0c274d3029e28c892356f84802b071e27cb))
+
 ## 1.0.0 (2025-06-05)
 
 
