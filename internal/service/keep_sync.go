@@ -64,6 +64,9 @@ func (s *keepSyncService) prepareData() ([]ShoppingListSyncData, error) {
 
 func (s *keepSyncService) SyncShoppingLists() error {
 	data, err := s.prepareData()
+	if err != nil {
+		return fmt.Errorf("failed to prepare data for sync: %w", err)
+	}
 	pythonPath := "./scripts/.venv/bin/python3"
 	scriptPath := "./scripts/keep_updater.py"
 	jsonData, _ := json.Marshal(data)
