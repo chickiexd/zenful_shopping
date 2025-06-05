@@ -1,0 +1,37 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t zenful_shopping .
+
+      - name: Stop old container
+        run: |
+          docker stop zenful_shopping || true
+          docker rm zenful_shopping || true
+
+      - name: Run Docker container with env vars
+        run: |
+          docker run -d --name zenful_shopping \
+            -p 8080:8080 \
+            -e ADDR=${{ secrets.ADDR }} \
+            -e DB_HOST=${{ secrets.DB_HOST}} \
+            -e DB_PORT=${{ secrets.DB_PORT}} \
+            -e DB_USER=${{ secrets.DB_USER}} \
+            -e DB_PASSWORD=${{ secrets.DB_PASSWORD}} \
+            -e DB_NAME=${{ secrets.DB_NAME}} \
+            -e DB_ADDR=${{ secrets.DB_ADDR}} \
+            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY}} \
+            -e GOOGLE_TOKEN=${{ secrets.GOOGLE_TOKEN}} \
+            -e GOOGLE_USERNAME=${{ secrets.GOOGLE_USERNAME}} \
+            zenful_shopping
