@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/chickiexd/zenful_shopping/compare/v1.1.0...v1.1.1) (2025-06-05)
+
+
+### Bug Fixes
+
+* update sed cmd to match correctly ([aaf0ec4](https://github.com/chickiexd/zenful_shopping/commit/aaf0ec4548126c9f8811a2ec2bbdb20a2a1a6de4))
+
 ## [1.1.0](https://github.com/chickiexd/zenful_shopping/compare/v1.0.0...v1.1.0) (2025-06-05)
 
 
