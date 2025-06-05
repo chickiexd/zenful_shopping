@@ -42,9 +42,6 @@ Godeps/
 *.test
 *.cover
 
-# Dependency files
-go.sum
-
 # Environment and config files (Security)
 .env
 .envrc
