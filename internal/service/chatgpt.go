@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	// "strings"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/chickiexd/zenful_shopping/internal/dto"
 	"github.com/chickiexd/zenful_shopping/internal/env"
+	"github.com/chickiexd/zenful_shopping/internal/logger"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 	"github.com/chickiexd/zenful_shopping/utils"
 )
@@ -182,12 +182,6 @@ func (s *OpenAIService) getIngredientsAndFoodGroups(ingredients []newIngredientF
 	}
 	content := response.Choices[0].Message.Content
 
-	// Strip code fences like ```json\n...\n```
-	// content = strings.TrimPrefix(content, "```json\n")
-	// content = strings.TrimSuffix(content, "```")
-	// content = strings.TrimSpace(content) // in case there's whitespace
-
-	log.Printf("Response from OpenAI: %s", response.Choices[0].Message.Content)
 	var parsed_ingredients []dto.ParsedMultipleIngredientInformation
 	err = json.Unmarshal([]byte(content), &parsed_ingredients)
 	return parsed_ingredients, err
@@ -240,7 +234,7 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 	for _, ingredient := range recipe.Ingredients {
 		measurement_unit, err := s.storage.MeasurementUnits.GetByName(ingredient.MeasurementUnit)
 		if err != nil {
-			log.Printf("Error getting measurement unit: %v for ingredient %s", err, ingredient.Name)
+			logger.Log.Errorw("Error getting measurement unit", "measurement_unit", ingredient.MeasurementUnit, "error", err)
 			return nil, err
 		}
 		existing_ingredient, err := s.storage.Ingredients.GetByName(ingredient.Name)
@@ -262,7 +256,6 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 		}
 
 	}
-	log.Printf("New ingredients found: %v", new_ingredients)
 	parsed_ingredients, parsed_foodgroups, err := s.ParseNewIngredients(new_ingredients)
 	if err != nil {
 		return nil, err
@@ -271,7 +264,7 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 	response_recipe.NewFoodGrops = append(response_recipe.NewFoodGrops, parsed_foodgroups...)
 	response_recipe.Instructions = recipe.Instructions
 	response_recipe.NewFoodGrops = utils.RemoveDuplicate(response_recipe.NewFoodGrops)
-	log.Println("Parsed recipe: ", response_recipe)
+	logger.Log.Infow("Parsed recipe successfully")
 	return &response_recipe, nil
 }
 
@@ -314,7 +307,6 @@ func (s *OpenAIService) ParseNewIngredients(new_ingredients []newIngredientFound
 	var parsed_ingredients []dto.ParsedIngredient
 	var new_parsed_food_groups []dto.ParsedFoodGroup
 	parsed_ingredients_info, err := s.getIngredientsAndFoodGroups(new_ingredients)
-	log.Printf("Parsed ingredients_info: %v", parsed_ingredients_info)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -352,7 +344,5 @@ func (s *OpenAIService) ParseNewIngredients(new_ingredients []newIngredientFound
 		}
 		parsed_ingredients = append(parsed_ingredients, parsed_ingredient)
 	}
-	log.Printf("Parsed ingredients: %v", parsed_ingredients)
-	log.Printf("New parsed food groups: %v", new_parsed_food_groups)
 	return parsed_ingredients, new_parsed_food_groups, nil
 }
