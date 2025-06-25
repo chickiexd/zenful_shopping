@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/chickiexd/zenful_shopping/compare/v1.1.2...v1.1.3) (2025-06-25)
+
+
+### Bug Fixes
+
+* big recipe calls possible, due to reduced api calls ([8c729c1](https://github.com/chickiexd/zenful_shopping/commit/8c729c1e9f07c4c6204fa4d43d54a667f23e37f8))
+
 ## [1.1.2](https://github.com/chickiexd/zenful_shopping/compare/v1.1.1...v1.1.2) (2025-06-05)
 
 
