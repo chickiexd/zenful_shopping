@@ -86,6 +86,15 @@ type ParsedIngredientInformation struct {
 	FoodGroups            []string `json:"food_groups"`
 }
 
+type ParsedMultipleIngredientInformation struct {
+	IngredientName        string   `json:"ingredient_name"`
+	IngredientDescription string   `json:"ingredient_description"`
+	MeasurementUnits      []string `json:"measurement_units"`
+	FoodGroups            []string `json:"food_groups"`
+	Quantity              float64  `json:"quantity"`
+	MeasurementUnitID     uint     `json:"measurement_unit_id"`
+}
+
 // returned to the client
 type ParsedRecipe struct {
 	Recipe         recipeRequest              `json:"recipe" form:"recipe"`
