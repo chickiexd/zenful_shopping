@@ -1,11 +1,11 @@
 package service
 
 import (
-	"log"
-	"os"
 	"github.com/chickiexd/zenful_shopping/internal/dto"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 	"github.com/chickiexd/zenful_shopping/utils"
+	"log"
+	"os"
 
 	"gorm.io/gorm"
 )
@@ -158,6 +158,15 @@ func (s *recipeService) AddToShoppingList(recipe_id uint) error {
 			return err
 		}
 		for _, ing := range recipe.RecipeIngredients {
+			pantry_ingredient, err := s.storage.Pantry.GetByIngredientID(ing.IngredientID)
+			if pantry_ingredient != nil {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
 			food_groups, err := s.storage.Ingredients.GetFoodGroupsByID(ing.IngredientID)
 			if err != nil {
 				return err

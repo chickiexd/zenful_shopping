@@ -14,6 +14,18 @@ definitions:
       step_number:
         type: integer
     type: object
+  dto.PantryIngredientRequest:
+    properties:
+      ingredient_id:
+        type: integer
+    type: object
+  dto.PantryIngredientResponse:
+    properties:
+      ingredient_id:
+        type: integer
+      ingredient_name:
+        type: string
+    type: object
   dto.RecipeIngredientResponse:
     properties:
       ingredient_id:
@@ -66,6 +78,118 @@ info:
     url: https://opensource.org/licenses/MIT
   title: Zenful Shopping API
 paths:
+  /pantry_ingredients:
+    get:
+      consumes:
+      - application/json
+      description: Get all pantry_ingredients from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PantryIngredientResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get all pantry_ingredients
+      tags:
+      - pantry_ingredients
+  /pantry_ingredients/add:
+    post:
+      consumes:
+      - application/json
+      description: Add an ingredient to the pantry by its ID
+      parameters:
+      - description: Ingredient ID to add
+        in: body
+        name: ingredient_id
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PantryIngredientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Add ingredient to pantry
+      tags:
+      - pantry_ingredients
+  /pantry_ingredients/remove:
+    post:
+      consumes:
+      - application/json
+      description: Remove a ingredient from the pantry by its ID
+      parameters:
+      - description: Ingredient ID to remove
+        in: body
+        name: ingredient_id
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PantryIngredientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Remove a ingredient from the pantry
+      tags:
+      - pantry_ingredients
+  /pantry_ingredients/remove_all:
+    post:
+      consumes:
+      - application/json
+      description: Remove all ingredients from the pantry
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Remove all ingredients from the pantry
+      tags:
+      - pantry_ingredients
   /recipes:
     get:
       consumes:

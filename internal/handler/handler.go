@@ -18,6 +18,12 @@ type Handler struct {
 		Create(http.ResponseWriter, *http.Request)
 		AddToShoppingList(http.ResponseWriter, *http.Request)
 	}
+	Pantry interface {
+		GetAll(http.ResponseWriter, *http.Request)
+		Create(http.ResponseWriter, *http.Request)
+		Delete(http.ResponseWriter, *http.Request)
+		DeleteAll(http.ResponseWriter, *http.Request)
+	}
 	MeasurementUnits interface {
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
@@ -51,6 +57,7 @@ func NewHandler(service *service.Service) Handler {
 		ChatGPT:          &ChatGPTHandler{service},
 		Images:           &ImageHandler{service},
 		ShoppingList:     &ShoppingListHandler{service},
+		Pantry:           &PantryHandler{service},
 		KeepSync:         &KeepSyncHandler{service},
 		// Users:   &userHandler{service},
 	}

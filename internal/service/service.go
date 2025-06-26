@@ -19,6 +19,12 @@ type Service struct {
 		GetAll() ([]dto.IngredientResponse, error)
 		AddToShoppingList(*dto.AddIngredientToShoppingListRequest) (*dto.ShoppingListItemResponse, error)
 	}
+	Pantry interface {
+		GetAll() ([]dto.PantryIngredientResponse, error)
+		Create(uint) error
+		Delete(uint) error
+		DeleteAll() error
+	}
 	MeasurmentUnits interface {
 		Create(*dto.CreateMeasurementUnit) error
 		GetAll() ([]store.MeasurementUnit, error)
@@ -52,6 +58,7 @@ func NewService(store *store.Storage) Service {
 		MeasurmentUnits: &MeasurementUnitService{store},
 		FoodGroups:      &FoodGroupService{store},
 		ShoppingList:    &ShoppingListService{store},
+		Pantry:          &pantryService{store},
 		KeepSync:        &keepSyncService{store},
 		ChatGPT:         openAIService,
 	}
