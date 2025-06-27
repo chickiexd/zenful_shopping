@@ -14,7 +14,7 @@ services:
       - GOOGLE_TOKEN=${GOOGLE_TOKEN}
       - GOOGLE_USERNAME=${GOOGLE_USERNAME}
     volumes:
-      - ./uploads:/app/file_storage
+      - ${FILE_STORAGE_PATH}:/app/file_storage
     networks:
       - nginx_net
       - zenful_shopping
