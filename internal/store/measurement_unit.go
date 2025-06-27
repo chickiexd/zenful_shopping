@@ -9,6 +9,7 @@ import (
 type MeasurementUnit struct {
 	MeasurementUnitID uint         `gorm:"primaryKey" json:"measurement_unit_id"`
 	Name              string       `gorm:"not null" json:"name"`
+	Abbreviation      string       `json:"abbreviation"`
 	CreatedAt         time.Time    `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         time.Time    `gorm:"autoUpdateTime" json:"updated_at"`
 	Ingredients       []Ingredient `gorm:"many2many:ingredient_measurement_units;joinForeignKey:MeasurementUnitID;joinReferences:IngredientID" json:"ingredients"`

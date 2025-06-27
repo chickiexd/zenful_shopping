@@ -48,7 +48,7 @@ func (s *keepSyncService) prepareData() ([]ShoppingListSyncData, error) {
 			// TODO: use abbreviation for measurement unit
 			ingredientData := IngredientSyncData{
 				Name:     ingredient.Name,
-				Quantity: fmt.Sprintf("%g %s", item.Quantity, measurementUnit.Name),
+				Quantity: fmt.Sprintf("%g %s", item.Quantity, measurementUnit.Abbreviation),
 			}
 			ingredientsData = append(ingredientsData, ingredientData)
 		}
