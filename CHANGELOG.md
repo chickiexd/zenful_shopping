@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/chickiexd/zenful_shopping/compare/v1.2.0...v1.3.0) (2025-06-27)
+
+
+### Features
+
+* add color to shoppinglist ([5e5d41f](https://github.com/chickiexd/zenful_shopping/commit/5e5d41fc05906f72cccd0cdaf5ed851c39885d0c))
+* added abbreviation to measurement_units ([5e3019a](https://github.com/chickiexd/zenful_shopping/commit/5e3019a914d77389dae947701438604fe9dc2a24))
+
+
+### Bug Fixes
+
+* correct behaviour when no pantry entry is found ([05a7c99](https://github.com/chickiexd/zenful_shopping/commit/05a7c990472c832845ab78bbbfc9dfba54c6a97d))
+* correct GORM foreign key tag ([0fd8299](https://github.com/chickiexd/zenful_shopping/commit/0fd82999fec7f7efbc4431d3c1158b3362a4c598))
+* dont add pantry item if already exists ([6daede9](https://github.com/chickiexd/zenful_shopping/commit/6daede90da9f973debdf230c563b0b9cf8698c00))
+* mark parent item as checked when shoppinglist empty ([87ef807](https://github.com/chickiexd/zenful_shopping/commit/87ef807709faa9d52b46e4b2ffdb2cbd76c08adc))
+
 ## [1.2.0](https://github.com/chickiexd/zenful_shopping/compare/v1.1.3...v1.2.0) (2025-06-27)
 
 
