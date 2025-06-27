@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/chickiexd/zenful_shopping/internal/env"
 	"github.com/google/uuid"
 )
 
@@ -15,7 +16,8 @@ func SaveImageLocally(file multipart.File, header *multipart.FileHeader) (string
 
 	ext := filepath.Ext(header.Filename)
 	file_name := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	save_path := filepath.Join("uploads", "recipes", file_name)
+	file_storage := env.GetString("FILE_STORAGE", "images")
+	save_path := filepath.Join(file_storage, "recipes", file_name)
 
 	if err := os.MkdirAll(filepath.Dir(save_path), os.ModePerm); err != nil {
 		return "", err

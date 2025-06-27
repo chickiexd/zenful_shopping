@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/chickiexd/zenful_shopping/internal/env"
 	"github.com/chickiexd/zenful_shopping/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -20,7 +22,8 @@ func (h *ImageHandler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid filename", http.StatusBadRequest)
 		return
 	}
-	image_path := filepath.Join("uploads/recipes", filename)
+	file_storage := env.GetString("FILE_STORAGE", "./uploads/recipes")
+	image_path := filepath.Join(file_storage, "recipes", filename)
 	if _, err := os.Stat(image_path); os.IsNotExist(err) {
 		http.NotFound(w, r)
 		return

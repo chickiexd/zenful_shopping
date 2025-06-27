@@ -13,6 +13,8 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_TOKEN=${GOOGLE_TOKEN}
       - GOOGLE_USERNAME=${GOOGLE_USERNAME}
+    volumes:
+      - ./uploads:/app/file_storage
     networks:
       - nginx_net
       - zenful_shopping
