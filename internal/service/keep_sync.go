@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/chickiexd/zenful_shopping/internal/env"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 )
 
@@ -67,8 +69,7 @@ func (s *keepSyncService) SyncShoppingLists() error {
 	if err != nil {
 		return fmt.Errorf("failed to prepare data for sync: %w", err)
 	}
-	// pythonPath := "./scripts/.venv/bin/python3"
-	pythonPath := "python3"
+	pythonPath := env.GetString("PYTHON_PATH", "python3")
 	scriptPath := "./scripts/keep_updater.py"
 	jsonData, _ := json.Marshal(data)
 	cmd := exec.Command(pythonPath, scriptPath)
