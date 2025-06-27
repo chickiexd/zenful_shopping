@@ -47,7 +47,12 @@ def update_note(note, ingredients):
     if not parent_item:
         print(f"Creating parent item: Zenful Shopping Items")
         parent_item = note.add("Zenful Shopping Items", False)
-    parent_item.checked = False
+    if ingredients is None:
+        parent_item.checked = True
+        print(f"No ingredients provided for {note.title}. Skipping update.")
+        return
+    else:
+        parent_item.checked = False
     print(f"Clearing existing items")
     clear_items(parent_item)
     print(f"Adding new items")
