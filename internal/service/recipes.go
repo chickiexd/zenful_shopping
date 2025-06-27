@@ -162,8 +162,7 @@ func (s *recipeService) AddToShoppingList(recipe_id uint) error {
 			if pantry_ingredient != nil {
 				continue
 			}
-
-			if err != nil {
+			if err != nil && err != gorm.ErrRecordNotFound {
 				return err
 			}
 
