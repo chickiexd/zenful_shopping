@@ -7,7 +7,7 @@ import (
 type PantryIngredient struct {
 	PantryIngredientID uint `gorm:"primaryKey"`
 	IngredientID       uint
-	Ingredient         Ingredient `gorm:"foreignKey:IngredientID"`
+	Ingredient         Ingredient
 }
 
 type PantryRepository struct {
