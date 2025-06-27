@@ -7,10 +7,11 @@ import (
 )
 
 type ShoppingList struct {
-	ShoppingListID uint      `gorm:"primaryKey"`
-	Name           string    `gorm:"not null"`
-	CreatedAt      time.Time `gorm:"autoCreateTime"`
-	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
+	ShoppingListID uint        `gorm:"primaryKey"`
+	Name           string      `gorm:"not null"`
+	Color          string      `gorm:"not null"`
+	CreatedAt      time.Time   `gorm:"autoCreateTime"`
+	UpdatedAt      time.Time   `gorm:"autoUpdateTime"`
 	FoodGroups     []FoodGroup `gorm:"many2many:shopping_list_food_groups;joinForeignKey:ShoppingListID;joinReferences:FoodGroupID"`
 }
 

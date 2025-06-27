@@ -55,7 +55,7 @@ func (s *keepSyncService) prepareData() ([]ShoppingListSyncData, error) {
 		listData := ShoppingListSyncData{
 			Title:       list.Name,
 			Ingredients: ingredientsData,
-			Color:       "GREEN",
+			Color:       list.Color,
 		}
 		syncData = append(syncData, listData)
 	}
