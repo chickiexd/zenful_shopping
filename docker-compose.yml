@@ -1,7 +1,7 @@
 services:
-  zenful_shopping:
+  zenful_shopping_backend:
     build: .
-    container_name: zenful_shopping
+    container_name: zenful_shopping_backend
     environment:
       - ADDR=${ADDR}
       - DB_HOST=${DB_HOST}
