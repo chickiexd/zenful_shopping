@@ -36,6 +36,7 @@ func NewOpenAIService(storage *store.Storage) *OpenAIService {
 func (s *OpenAIService) getShoppingListForFoodGroup(food_group_name string) (string, error) {
 	shopping_lists, err := s.storage.ShoppingLists.GetAll()
 	if err != nil {
+		logger.Log.Errorw("Error getting shopping lists", "error", err)
 		return "", err
 	}
 	shopping_lists_str := ""
@@ -70,6 +71,7 @@ func (s *OpenAIService) getShoppingListForFoodGroup(food_group_name string) (str
 		},
 	})
 	if err != nil {
+		logger.Log.Errorw("Error creating chat completion during shoppinglist queue", "error", err)
 		return "", err
 	}
 	var shopping_list dto.ShoppingListName
@@ -80,6 +82,7 @@ func (s *OpenAIService) getShoppingListForFoodGroup(food_group_name string) (str
 func (s *OpenAIService) createIngredient(ingredient_name string) (*dto.ParsedIngredientInformation, error) {
 	food_groups, err := s.storage.FoodGroups.GetAll()
 	if err != nil {
+		logger.Log.Errorw("Error getting food groups", "error", err)
 		return nil, err
 	}
 	food_groups_str := ""
@@ -118,6 +121,7 @@ func (s *OpenAIService) createIngredient(ingredient_name string) (*dto.ParsedIng
 		},
 	})
 	if err != nil {
+		logger.Log.Errorw("Error creating chat completion during ingredient creation", "error", err)
 		return nil, err
 	}
 	var ingredient dto.ParsedIngredientInformation
@@ -128,6 +132,7 @@ func (s *OpenAIService) createIngredient(ingredient_name string) (*dto.ParsedIng
 func (s *OpenAIService) getIngredientsAndFoodGroups(ingredients []newIngredientFound) ([]dto.ParsedMultipleIngredientInformation, error) {
 	food_groups, err := s.storage.FoodGroups.GetAll()
 	if err != nil {
+		logger.Log.Errorw("Error getting food groups", "error", err)
 		return nil, err
 	}
 	food_groups_str := ""
@@ -136,6 +141,7 @@ func (s *OpenAIService) getIngredientsAndFoodGroups(ingredients []newIngredientF
 	}
 	ingredients_str, err := json.MarshalIndent(ingredients, "", "  ")
 	if err != nil {
+		logger.Log.Errorw("Error marshalling ingredients", "error", err)
 		return nil, err
 	}
 	prompt := fmt.Sprintf(`
@@ -178,6 +184,7 @@ func (s *OpenAIService) getIngredientsAndFoodGroups(ingredients []newIngredientF
 		},
 	})
 	if err != nil {
+		logger.Log.Errorw("Error creating chat completion during ingredient parsing", "error", err)
 		return nil, err
 	}
 	content := response.Choices[0].Message.Content
@@ -217,12 +224,14 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 		},
 	})
 	if err != nil {
+		logger.Log.Errorw("Error creating chat completion during recipe parsing", "error", err)
 		return nil, err
 	}
 
 	var recipe dto.ParsedRecipeInformation
 	err = json.Unmarshal([]byte(response.Choices[0].Message.Content), &recipe)
 	if err != nil {
+		logger.Log.Errorw("Error unmarshalling recipe", "error", err, "response", response.Choices[0].Message.Content)
 		return nil, err
 	}
 
@@ -239,6 +248,7 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 		}
 		existing_ingredient, err := s.storage.Ingredients.GetByName(ingredient.Name)
 		if err == gorm.ErrRecordNotFound {
+			logger.Log.Infow("Ingredient not found, creating new ingredient", "ingredient_name", ingredient.Name)
 			new_ingredient := newIngredientFound{
 				Name:              ingredient.Name,
 				Quantity:          ingredient.Quantity,
@@ -246,6 +256,7 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 			}
 			new_ingredients = append(new_ingredients, new_ingredient)
 		} else if err != nil {
+			logger.Log.Errorw("Error getting ingredient", "ingredient_name", ingredient.Name, "error", err)
 			return nil, err
 		} else {
 			response_recipe.Ingredients = append(response_recipe.Ingredients, dto.RecipeIngredientResponse{
@@ -258,6 +269,7 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 	}
 	parsed_ingredients, parsed_foodgroups, err := s.ParseNewIngredients(new_ingredients)
 	if err != nil {
+		logger.Log.Errorw("Error parsing new ingredients", "error", err)
 		return nil, err
 	}
 	response_recipe.NewIngredients = append(response_recipe.NewIngredients, parsed_ingredients...)
@@ -273,22 +285,26 @@ func (s *OpenAIService) ParseNewIngredient(ingredient_name string) (*dto.ParsedI
 	var new_parsed_food_groups []dto.ParsedFoodGroup
 	parsed_ingredient_info, err := s.createIngredient(ingredient_name)
 	if err != nil {
+		logger.Log.Errorw("Error creating ingredient", "ingredient_name", ingredient_name, "error", err)
 		return nil, nil, err
 	}
 	for _, food_group := range parsed_ingredient_info.FoodGroups {
 		_, err := s.storage.FoodGroups.GetByName(food_group)
 		if err == gorm.ErrRecordNotFound {
+			logger.Log.Infow("Food group not found, creating new food group", "food_group_name", food_group)
 			shopping_list, err := s.getShoppingListForFoodGroup(food_group)
 			new_food_group := &dto.ParsedFoodGroup{
 				Name:          food_group,
 				ShoppingLists: shopping_list,
 			}
 			if err != nil {
+				logger.Log.Errorw("Error getting shopping list for food group", "food_group_name", food_group, "error", err)
 				return nil, nil, err
 			}
 			new_parsed_food_groups = append(new_parsed_food_groups, *new_food_group)
 			parsed_ingredient.ParsedFoodGroups = append(parsed_ingredient.ParsedFoodGroups, *new_food_group)
 		} else if err != nil {
+			logger.Log.Errorw("Error getting food group", "food_group_name", food_group, "error", err)
 			return nil, nil, err
 		} else {
 			parsed_food_group := &dto.ParsedFoodGroup{
@@ -308,6 +324,7 @@ func (s *OpenAIService) ParseNewIngredients(new_ingredients []newIngredientFound
 	var new_parsed_food_groups []dto.ParsedFoodGroup
 	parsed_ingredients_info, err := s.getIngredientsAndFoodGroups(new_ingredients)
 	if err != nil {
+		logger.Log.Errorw("Error getting ingredients and food groups", "error", err)
 		return nil, nil, err
 	}
 	for _, parsed_ingredient_info := range parsed_ingredients_info {
@@ -322,17 +339,20 @@ func (s *OpenAIService) ParseNewIngredients(new_ingredients []newIngredientFound
 		for _, food_group := range parsed_ingredient_info.FoodGroups {
 			_, err := s.storage.FoodGroups.GetByName(food_group)
 			if err == gorm.ErrRecordNotFound {
+				logger.Log.Infow("Food group not found, creating new food group", "food_group_name", food_group)
 				shopping_list, err := s.getShoppingListForFoodGroup(food_group)
 				new_food_group := &dto.ParsedFoodGroup{
 					Name:          food_group,
 					ShoppingLists: shopping_list,
 				}
 				if err != nil {
+					logger.Log.Errorw("Error getting shopping list for food group", "food_group_name", food_group, "error", err)
 					return nil, nil, err
 				}
 				new_parsed_food_groups = append(new_parsed_food_groups, *new_food_group)
 				parsed_ingredient.ParsedFoodGroups = append(parsed_ingredient.ParsedFoodGroups, *new_food_group)
 			} else if err != nil {
+				logger.Log.Errorw("Error getting food group", "food_group_name", food_group, "error", err)
 				return nil, nil, err
 			} else {
 				parsed_food_group := &dto.ParsedFoodGroup{
