@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.1](https://github.com/chickiexd/zenful_shopping/compare/v1.3.0...v1.3.1) (2025-06-28)
+
+
+### Bug Fixes
+
+* added cors headers ([e72af1d](https://github.com/chickiexd/zenful_shopping/commit/e72af1d374ea270ff9d2b647b299ae2eb91bd599))
+* added cors headers ([e72af1d](https://github.com/chickiexd/zenful_shopping/commit/e72af1d374ea270ff9d2b647b299ae2eb91bd599))
+* autoincrement ids in db ([000f943](https://github.com/chickiexd/zenful_shopping/commit/000f943e9912bf4f763d9478637ce0477c7c980a))
+* clearing now empty lists ([2b56888](https://github.com/chickiexd/zenful_shopping/commit/2b568887867aba5d86cd10e80b2cc480d22c27b9))
+* correct file storage ([0c126ad](https://github.com/chickiexd/zenful_shopping/commit/0c126adeef81e3e2544493ca809b70dc9a2dd869))
+* correct file storage ([0c126ad](https://github.com/chickiexd/zenful_shopping/commit/0c126adeef81e3e2544493ca809b70dc9a2dd869))
+* correct file storage ([0c126ad](https://github.com/chickiexd/zenful_shopping/commit/0c126adeef81e3e2544493ca809b70dc9a2dd869))
+* script execution ([10472c2](https://github.com/chickiexd/zenful_shopping/commit/10472c273d0594f9ea0d9034f812fb9d65b4486b))
+* venv in container ([10472c2](https://github.com/chickiexd/zenful_shopping/commit/10472c273d0594f9ea0d9034f812fb9d65b4486b))
+* venv in container ([10472c2](https://github.com/chickiexd/zenful_shopping/commit/10472c273d0594f9ea0d9034f812fb9d65b4486b))
+* venv in container ([10472c2](https://github.com/chickiexd/zenful_shopping/commit/10472c273d0594f9ea0d9034f812fb9d65b4486b))
+* venv in container ([10472c2](https://github.com/chickiexd/zenful_shopping/commit/10472c273d0594f9ea0d9034f812fb9d65b4486b))
+
 ## [1.3.0](https://github.com/chickiexd/zenful_shopping/compare/v1.2.0...v1.3.0) (2025-06-27)
 
 
