@@ -13,7 +13,7 @@
 - [ ] add url to original recipe
 
 ## measurements
-- [ ] add abbreviation to measurement
+- [x] add abbreviation to measurement
 
 ## db
-- [ ] fix auto increment after default inserts
+- [x] fix auto increment after default inserts
