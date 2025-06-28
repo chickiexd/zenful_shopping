@@ -9,7 +9,7 @@ import (
 	"github.com/chickiexd/zenful_shopping/internal/store"
 )
 
-const version = "1.3.0"
+const version = "1.3.1"
 
 //	@title			Zenful Shopping API
 //	@description	This is the API for Zenful Shopping, a platform to manage your recipes, ingredients and shopping lists.
