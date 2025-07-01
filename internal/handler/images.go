@@ -23,7 +23,7 @@ func (h *ImageHandler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid filename", http.StatusBadRequest)
 		return
 	}
-	file_storage := env.GetString("FILE_STORAGE", "/app/file_storage")
+	file_storage := env.GetString("FILE_STORAGE_PATH", "/app/file_storage")
 	image_path := filepath.Join(file_storage, "recipes", filename)
 	log.Println("Serving image:", image_path)
 	if _, err := os.Stat(image_path); os.IsNotExist(err) {
