@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.2](https://github.com/chickiexd/zenful_shopping/compare/v1.3.1...v1.3.2) (2025-07-01)
+
+
+### Bug Fixes
+
+* image default storage path ([839ceeb](https://github.com/chickiexd/zenful_shopping/commit/839ceeb4ff81b63115e2a77e00f2358d03030df9))
+* image default storage path ([27a0071](https://github.com/chickiexd/zenful_shopping/commit/27a0071d10dc9644ceeddddfd937bc7551396366))
+
 ## [1.3.1](https://github.com/chickiexd/zenful_shopping/compare/v1.3.0...v1.3.1) (2025-06-28)
 
 
