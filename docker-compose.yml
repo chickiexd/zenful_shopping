@@ -13,7 +13,6 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_TOKEN=${GOOGLE_TOKEN}
       - GOOGLE_USERNAME=${GOOGLE_USERNAME}
-      - FILE_STORAGE_PATH=${FILE_STORAGE_PATH}
     volumes:
       - ${FILE_STORAGE_PATH}:/app/file_storage
     networks:
