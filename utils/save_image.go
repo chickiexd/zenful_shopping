@@ -17,7 +17,7 @@ func SaveImageLocally(file multipart.File, header *multipart.FileHeader) (string
 
 	ext := filepath.Ext(header.Filename)
 	file_name := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	file_storage := env.GetString("FILE_STORAGE_PATH", "images")
+	file_storage := env.GetString("FILE_STORAGE_PATH", "/app/file_storage")
 	save_path := filepath.Join(file_storage, "recipes", file_name)
 	logger.Log.Debugf("Saving image to %s", save_path)
 	if err := os.MkdirAll(filepath.Dir(save_path), os.ModePerm); err != nil {
