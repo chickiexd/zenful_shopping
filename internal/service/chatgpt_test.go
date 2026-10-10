@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/chickiexd/zenful_shopping/internal/dto"
@@ -63,6 +64,8 @@ const germanRecipe = `{
     {"original_text": "Zwiebeln", "name": "Onions", "existing_ingredient": "", "quantity": 1, "unit": "piece", "description": "", "measurement_units": ["piece"], "food_groups": ["Vegetables"]},
     {"original_text": "Salz", "name": "Salt", "existing_ingredient": "salt", "quantity": 0.1, "unit": "Teaspoon", "description": "", "measurement_units": ["gram"], "food_groups": ["Spices"]},
     {"original_text": "Knoblauch", "name": "Garlic", "existing_ingredient": "Garlic", "quantity": 1, "unit": "piece", "description": "", "measurement_units": ["piece"], "food_groups": ["Vegetables"]},
+    {"original_text": "Meersalz", "name": "Salt", "existing_ingredient": "Salt", "quantity": 1, "unit": "tablespoon", "description": "", "measurement_units": ["gram"], "food_groups": ["Spices"]},
+    {"original_text": "Knoblauchpulver", "name": "Garlic", "existing_ingredient": "Garlic", "quantity": 10, "unit": "gram", "description": "", "measurement_units": ["gram"], "food_groups": ["Spices"]},
     {"original_text": "Kichererbsen", "name": "Chickpea", "existing_ingredient": "", "quantity": 400, "unit": "gram", "description": "A legume.", "measurement_units": ["piece"], "food_groups": ["Legumes", "vegetables", "Grains"]},
     {"original_text": "Kichererbsen (Dose)", "name": "Chickpeas", "existing_ingredient": "", "quantity": 200, "unit": "gram", "description": "A legume.", "measurement_units": ["gram"], "food_groups": ["Legumes"]}
   ],
@@ -88,7 +91,7 @@ func TestParseRecipeResolvesAgainstCatalog(t *testing.T) {
 		t.Errorf("instructions not renumbered: %+v", got.Instructions)
 	}
 
-	byID := map[uint]dto.RecipeIngredientResponse{}
+	byID := map[uint]dto.ParsedRecipeIngredient{}
 	for _, ing := range got.Ingredients {
 		byID[ing.IngredientID] = ing
 	}
@@ -101,8 +104,17 @@ func TestParseRecipeResolvesAgainstCatalog(t *testing.T) {
 	if _, ok := byID[seedOnion]; !ok {
 		t.Error("plural 'Onions' should match Onion")
 	}
-	if salt := byID[seedSalt]; salt.MeasurementUnitID != unitTeaspoon {
-		t.Errorf("unit 'Teaspoon' should resolve case-insensitively, got %+v", salt)
+	if salt := byID[seedSalt]; salt.MeasurementUnitID != unitTeaspoon || salt.Quantity < 3.099 || salt.Quantity > 3.101 {
+		t.Errorf("salt: 'Teaspoon' should resolve case-insensitively and 1 tablespoon merge as 3 teaspoons, got %+v", salt)
+	}
+	if g := byID[seedGarlic]; g.MatchedBy != matchedByModel || g.OriginalName != "Knoblauchzehen" || g.IngredientName != "Garlic" {
+		t.Errorf("garlic match details: got %+v", g)
+	}
+	if o := byID[seedOnion]; o.MatchedBy != matchedByName {
+		t.Errorf("onion should be matched by name, got %+v", o)
+	}
+	if len(got.Warnings) != 1 || !strings.Contains(got.Warnings[0], "Garlic") {
+		t.Errorf("garlic in piece and gram cannot be combined and should warn, got %v", got.Warnings)
 	}
 
 	if len(got.NewIngredients) != 1 {
@@ -148,7 +160,7 @@ func TestParseRecipeUsesRememberedAlias(t *testing.T) {
 
 	got, err := svc.ParseRecipe(context.Background(), "irrelevant")
 	must(t, err)
-	if len(got.Ingredients) != 1 || got.Ingredients[0].IngredientID != seedTomato {
+	if len(got.Ingredients) != 1 || got.Ingredients[0].IngredientID != seedTomato || got.Ingredients[0].MatchedBy != matchedByAlias {
 		t.Fatalf("alias should resolve to Tomato, got %+v / new %+v", got.Ingredients, got.NewIngredients)
 	}
 	if got.Recipe.MealType == 0 {
@@ -188,5 +200,67 @@ func TestAddAlias(t *testing.T) {
 	err = svc.AddAlias(&dto.CreateIngredientAliasRequest{Alias: "x", IngredientID: 999999})
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Errorf("unknown ingredient should be not found, got %v", err)
+	}
+}
+
+func TestConvertQuantity(t *testing.T) {
+	if q, ok := convertQuantity(2, "tablespoon", "teaspoon"); !ok || q != 6 {
+		t.Errorf("2 tablespoon -> teaspoon: got %v %v", q, ok)
+	}
+	if q, ok := convertQuantity(500, "gram", "kilogram"); !ok || q != 0.5 {
+		t.Errorf("500 gram -> kilogram: got %v %v", q, ok)
+	}
+	if _, ok := convertQuantity(1, "gram", "cup"); ok {
+		t.Error("mass and volume must not convert")
+	}
+	if _, ok := convertQuantity(1, "piece", "gram"); ok {
+		t.Error("piece must not convert")
+	}
+}
+
+func TestRecipeCreateRejectsInvalidIngredients(t *testing.T) {
+	s := newTestStorage(t)
+	svc := &recipeService{s}
+	recipe := dto.RecipeRequest{Title: "Test", MealType: 1}
+	cases := map[string][]dto.IngredientRequest{
+		"duplicate":  {{IngredientID: seedGarlic, MeasurementUnitID: unitGram, Quantity: 1}, {IngredientID: seedGarlic, MeasurementUnitID: unitTeaspoon, Quantity: 1}},
+		"missing id": {{IngredientID: 0, MeasurementUnitID: unitGram, Quantity: 1}},
+		"unknown":    {{IngredientID: 999999, MeasurementUnitID: unitGram, Quantity: 1}},
+		"negative":   {{IngredientID: seedGarlic, MeasurementUnitID: unitGram, Quantity: -1}},
+	}
+	for name, ingredients := range cases {
+		_, err := svc.Create(&dto.CreateRecipeRequest{Recipe: recipe, Ingredients: ingredients})
+		var validationErr *ValidationError
+		if !errors.As(err, &validationErr) {
+			t.Errorf("%s: want a validation error, got %v", name, err)
+		}
+	}
+	_, err := svc.Create(&dto.CreateRecipeRequest{Recipe: dto.RecipeRequest{Title: " "}})
+	var validationErr *ValidationError
+	if !errors.As(err, &validationErr) {
+		t.Errorf("empty title: want a validation error, got %v", err)
+	}
+}
+
+func TestIngredientCreateRejectsUnknownFoodGroupAndDuplicates(t *testing.T) {
+	s := newTestStorage(t)
+	svc := &ingredientService{s}
+	var validationErr *ValidationError
+
+	_, err := svc.Create(&dto.CreateIngredientRequest{Name: "Chickpea", FoodGroups: []string{"No Such Group"}})
+	if !errors.As(err, &validationErr) {
+		t.Errorf("unknown food group: want a validation error, got %v", err)
+	}
+	_, err = svc.Create(&dto.CreateIngredientRequest{Name: "garlic"})
+	if !errors.As(err, &validationErr) {
+		t.Errorf("duplicate name (case-insensitive): want a validation error, got %v", err)
+	}
+
+	created, err := svc.Create(&dto.CreateIngredientRequest{Name: "Chickpea", Description: "A legume.", FoodGroups: []string{"vegetables"}})
+	must(t, err)
+	stored, err := s.Ingredients.GetByID(created.IngredientID)
+	must(t, err)
+	if stored.Description != "A legume." || len(created.FoodGroups) != 1 {
+		t.Errorf("description and food group should be saved, got %+v / %+v", stored, created)
 	}
 }
