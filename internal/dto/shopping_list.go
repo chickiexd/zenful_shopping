@@ -21,7 +21,3 @@ type ShoppingListItemID struct {
 type ShoppingListID struct {
 	ShoppingListID uint `json:"shopping_list_id"`
 }
-
-type ShoppingListName struct {
-	Name string `json:"shopping_list_name"`
-}

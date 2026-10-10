@@ -17,6 +17,7 @@ type Handler struct {
 		GetAll(http.ResponseWriter, *http.Request)
 		Create(http.ResponseWriter, *http.Request)
 		AddToShoppingList(http.ResponseWriter, *http.Request)
+		AddAlias(http.ResponseWriter, *http.Request)
 	}
 	Pantry interface {
 		GetAll(http.ResponseWriter, *http.Request)

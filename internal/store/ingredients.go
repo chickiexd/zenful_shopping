@@ -54,7 +54,7 @@ func (r *IngredientRepository) GetByID(id uint) (*Ingredient, error) {
 
 func (r *IngredientRepository) GetByName(name string) (*Ingredient, error) {
 	var ingredient Ingredient
-	err := r.db.Where("name = ?", name).First(&ingredient).Error
+	err := r.db.Where("LOWER(name) = LOWER(?)", name).First(&ingredient).Error
 	return &ingredient, err
 }
 

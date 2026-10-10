@@ -1,11 +1,16 @@
 package handler
 
 import (
+	stderrors "errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/errors"
 	"github.com/chickiexd/zenful_shopping/internal/service"
 	"github.com/chickiexd/zenful_shopping/utils"
+	"gorm.io/gorm"
 )
 
 type IngredientHandler struct {
@@ -13,9 +18,10 @@ type IngredientHandler struct {
 }
 
 func (h *IngredientHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	ingredients, err := h.service.Ingredients.GetAll();
+	ingredients, err := h.service.Ingredients.GetAll()
 	if err != nil {
-		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
+		errors.InternalServerError(w, r, err)
+		return
 	}
 	utils.WriteJSON(w, http.StatusOK, ingredients)
 }
@@ -104,3 +110,36 @@ func (h *IngredientHandler) AddToShoppingList(w http.ResponseWriter, r *http.Req
 // 	}
 // 	c.JSON(http.StatusOK, recipe)
 // }
+
+// AddAlias godoc
+//
+//	@Summary		Remember an alternative name for an ingredient
+//	@Description	Recipe imports resolve this name to the ingredient from now on
+//	@Tags			ingredients
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body	dto.CreateIngredientAliasRequest	true	"Alias"
+//	@Success		204
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Router			/ingredients/aliases [post]
+func (h *IngredientHandler) AddAlias(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateIngredientAliasRequest
+	if err := utils.ReadJSON(w, r, &req); err != nil {
+		errors.BadRequest(w, r, err)
+		return
+	}
+	if strings.TrimSpace(req.Alias) == "" {
+		errors.BadRequest(w, r, fmt.Errorf("alias must not be empty"))
+		return
+	}
+	if err := h.service.Ingredients.AddAlias(&req); err != nil {
+		if stderrors.Is(err, gorm.ErrRecordNotFound) {
+			errors.NotFound(w, r)
+			return
+		}
+		errors.InternalServerError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

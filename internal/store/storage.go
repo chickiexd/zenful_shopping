@@ -46,6 +46,14 @@ type Storage struct {
 		GetByID(uint) (*FoodGroup, error)
 		GetByName(string) (*FoodGroup, error)
 	}
+	Aliases interface {
+		WithTransaction(*gorm.DB) *AliasRepository
+		GetIngredientByAlias(string) (*Ingredient, error)
+		Upsert(*IngredientAlias) error
+	}
+	MealTypes interface {
+		GetAll() ([]MealType, error)
+	}
 	Users interface {
 		Create(context.Context, *User) error
 	}
@@ -84,5 +92,7 @@ func NewStorage(db *gorm.DB) Storage {
 		Instructions:     &InstructionRepository{db},
 		ShoppingLists:    &ShoppingListRepository{db},
 		Pantry:           &PantryRepository{db},
+		Aliases:          &AliasRepository{db},
+		MealTypes:        &MealTypeRepository{db},
 	}
 }

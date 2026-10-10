@@ -69,6 +69,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.handler.Ingredients.GetAll)
 			r.Post("/create", app.handler.Ingredients.Create)
 			r.Post("/add", app.handler.Ingredients.AddToShoppingList)
+			r.Post("/aliases", app.handler.Ingredients.AddAlias)
 		})
 		r.Route("/pantry", func(r chi.Router) {
 			r.Get("/", app.handler.Pantry.GetAll)

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	stderrors "errors"
 	"net/http"
 
 	"github.com/chickiexd/zenful_shopping/internal/errors"
@@ -25,6 +26,10 @@ func (h *ChatGPTHandler) ParseRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parsed_recipe, err := h.service.ChatGPT.ParseRecipe(r.Context(), submitted_recipe.Text)
+	if stderrors.Is(err, service.ErrRecipeRefused) {
+		utils.WriteJSONError(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
 	if err != nil {
 		errors.InternalServerError(w, r, err)
 		return

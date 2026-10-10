@@ -147,3 +147,17 @@ func (s *ingredientService) AddToShoppingList(ingredient *dto.AddIngredientToSho
 	}
 	return ingredient_response, nil
 }
+
+// AddAlias remembers req.Alias as another name for an existing ingredient.
+// Aliases equal to the ingredient's own name are skipped since they already match.
+func (s *ingredientService) AddAlias(req *dto.CreateIngredientAliasRequest) error {
+	ingredient, err := s.storage.Ingredients.GetByID(req.IngredientID)
+	if err != nil {
+		return err
+	}
+	alias := normalizeName(req.Alias)
+	if alias == "" || alias == normalizeName(ingredient.Name) {
+		return nil
+	}
+	return s.storage.Aliases.Upsert(&store.IngredientAlias{Alias: alias, IngredientID: ingredient.IngredientID})
+}

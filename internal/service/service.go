@@ -18,6 +18,7 @@ type Service struct {
 		GetByID(uint) (*dto.IngredientResponse, error)
 		GetAll() ([]dto.IngredientResponse, error)
 		AddToShoppingList(*dto.AddIngredientToShoppingListRequest) (*dto.ShoppingListItemResponse, error)
+		AddAlias(*dto.CreateIngredientAliasRequest) error
 	}
 	Pantry interface {
 		GetAll() ([]dto.PantryIngredientResponse, error)

@@ -27,3 +27,8 @@ type AddIngredientToShoppingListRequest struct {
 	MeasurementUnitID uint    `json:"measurement_unit_id"`
 	ShoppingListID    uint    `json:"shopping_list_id"`
 }
+
+type CreateIngredientAliasRequest struct {
+	Alias        string `json:"alias"`
+	IngredientID uint   `json:"ingredient_id"`
+}
