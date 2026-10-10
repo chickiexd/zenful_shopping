@@ -79,7 +79,11 @@ def sync(data):
             note = keep.createList(l["title"], [])
         else:
             print(f"Found existing note: {note.title}")
-        note.color = gkeepapi.node.ColorValue(l["color"])
+        try:
+            note.color = gkeepapi.node.ColorValue(l["color"])
+        except ValueError:
+            print(f"Unknown color '{l['color']}', using the default")
+            note.color = gkeepapi.node.ColorValue.White
         print(f"Setting note color to {note.color}")
         update_note(note, l["ingredients"])
 
