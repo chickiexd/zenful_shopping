@@ -46,6 +46,6 @@ func (r *FoodGroupRepository) GetByID(id uint) (*FoodGroup, error) {
 
 func (r *FoodGroupRepository) GetByName(name string) (*FoodGroup, error) {
 	var food_group FoodGroup
-	err := r.db.Where("name = ?", name).First(&food_group).Error
+	err := r.db.Where("LOWER(name) = LOWER(?)", name).First(&food_group).Error
 	return &food_group, err
 }

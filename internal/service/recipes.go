@@ -1,11 +1,14 @@
 package service
 
 import (
+	"errors"
+	"os"
+	"strings"
+
 	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/logger"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 	"github.com/chickiexd/zenful_shopping/utils"
-	"log"
-	"os"
 
 	"gorm.io/gorm"
 )
@@ -17,14 +20,17 @@ type recipeService struct {
 func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeResponse, error) {
 	var created_recipe *store.Recipe
 
-	image_path, err := utils.SaveImageLocally(req.Image, req.ImageHeader)
+	if err := s.validate(req); err != nil {
+		return nil, err
+	}
+	image_name, err := utils.SaveImageLocally(req.Image, req.ImageHeader)
 	if err != nil {
 		return nil, err
 	}
 
 	err = s.storage.DB.Transaction(func(tx *gorm.DB) error {
-		recipeRepo := s.storage.Recipes.(*store.RecipeRepository).WithTransaction(tx)
-		instructionRepo := s.storage.Instructions.(*store.InstructionRepository).WithTransaction(tx)
+		recipeRepo := s.storage.Recipes.WithTransaction(tx)
+		instructionRepo := s.storage.Instructions.WithTransaction(tx)
 
 		recipe := &store.Recipe{
 			Title:       req.Recipe.Title,
@@ -32,7 +38,7 @@ func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeRespons
 			CookTime:    req.Recipe.CookTime,
 			Servings:    req.Recipe.Servings,
 			Public:      req.Recipe.Public,
-			ImagePath:   image_path,
+			ImagePath:   image_name,
 			MealTypeID:  uint(req.Recipe.MealType),
 		}
 
@@ -70,7 +76,9 @@ func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeRespons
 		return nil
 	})
 	if err != nil {
-		os.Remove(image_path)
+		if rmErr := os.Remove(utils.ImagePath(image_name)); rmErr != nil {
+			logger.Log.Warnw("failed to remove image after failed recipe create", "image", image_name, "error", rmErr)
+		}
 		return nil, err
 	}
 
@@ -105,6 +113,35 @@ func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeRespons
 		Instructions: instructions,
 	}
 	return recipe_response, nil
+}
+
+// validate checks what the database would otherwise reject with an unhelpful error.
+func (s *recipeService) validate(req *dto.CreateRecipeRequest) error {
+	if strings.TrimSpace(req.Recipe.Title) == "" {
+		return validationErrorf("the recipe needs a title")
+	}
+	seen := map[uint]bool{}
+	for _, ing := range req.Ingredients {
+		if ing.IngredientID == 0 || ing.MeasurementUnitID == 0 {
+			return validationErrorf("every ingredient needs an ingredient and a unit")
+		}
+		if ing.Quantity < 0 {
+			return validationErrorf("ingredient quantities must not be negative")
+		}
+		ingredient, err := s.storage.Ingredients.GetByID(ing.IngredientID)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return validationErrorf("ingredient %d does not exist", ing.IngredientID)
+		}
+		if err != nil {
+			return err
+		}
+		// recipe_ingredients is keyed by (recipe_id, ingredient_id)
+		if seen[ing.IngredientID] {
+			return validationErrorf("%s is listed more than once; combine it into one line", ingredient.Name)
+		}
+		seen[ing.IngredientID] = true
+	}
+	return nil
 }
 
 func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {
@@ -150,113 +187,94 @@ func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {
 }
 
 func (s *recipeService) AddToShoppingList(recipe_id uint) error {
-	err := s.storage.DB.Transaction(func(tx *gorm.DB) error {
+	return s.storage.DB.Transaction(func(tx *gorm.DB) error {
+		recipeRepo := s.storage.Recipes.WithTransaction(tx)
+		pantryRepo := s.storage.Pantry.WithTransaction(tx)
+		ingredientRepo := s.storage.Ingredients.WithTransaction(tx)
 		shoppingListRepo := s.storage.ShoppingLists.WithTransaction(tx)
 
-		recipe, err := s.storage.Recipes.GetByID(recipe_id)
+		recipe, err := recipeRepo.GetByID(recipe_id)
 		if err != nil {
 			return err
 		}
 		for _, ing := range recipe.RecipeIngredients {
-			pantry_ingredient, err := s.storage.Pantry.GetByIngredientID(ing.IngredientID)
-			if pantry_ingredient != nil {
+			_, err := pantryRepo.GetByIngredientID(ing.IngredientID)
+			if err == nil {
 				continue
 			}
-			if err != nil && err != gorm.ErrRecordNotFound {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			}
 
-			food_groups, err := s.storage.Ingredients.GetFoodGroupsByID(ing.IngredientID)
+			food_groups, err := ingredientRepo.GetFoodGroupsByID(ing.IngredientID)
 			if err != nil {
 				return err
 			}
+			added := false
 			for _, food_group := range food_groups {
-				shopping_list, err := shoppingListRepo.GetByFoodGroupID(food_group.FoodGroupID)
+				shopping_lists, err := shoppingListRepo.GetByFoodGroupID(food_group.FoodGroupID)
 				if err != nil {
 					return err
 				}
-				if len(shopping_list) != 1 {
-					log.Println("0 or more than 1 shoppinlist found for: ", food_group.Name)
-				} else {
-					items, err := shoppingListRepo.GetItemsByIngredientID(ing.IngredientID)
-					if err != nil {
-						return err
-					}
-					if len(items) > 1 {
-						log.Println("more than 1 ingredient entry found in shoppinglist for: ", ing.IngredientID)
-						return err
-					}
-					if len(items) == 0 {
-						item := &store.ShoppingListItem{
-							IngredientID:      ing.IngredientID,
-							MeasurementUnitID: ing.MeasurementUnitID,
-							Quantity:          ing.Quantity,
-							ShoppingListID:    shopping_list[0].ShoppingListID,
-						}
-						if err := shoppingListRepo.CreateItemAssociation(item); err != nil {
-							return err
-						}
-					} else {
-						item := items[0]
-						// TODO check for different measurement units
-						item.Quantity += ing.Quantity
-						if err := shoppingListRepo.UpdateItemAssociation(&item); err != nil {
-							return err
-						}
-					}
-					break
+				if len(shopping_lists) != 1 {
+					logger.Log.Warnw("expected exactly one shopping list for food group", "food_group", food_group.Name, "found", len(shopping_lists))
+					continue
 				}
+				// items in a different unit become their own entry instead of being summed
+				_, err = addItemToShoppingList(shoppingListRepo, &store.ShoppingListItem{
+					IngredientID:      ing.IngredientID,
+					MeasurementUnitID: ing.MeasurementUnitID,
+					Quantity:          ing.Quantity,
+					ShoppingListID:    shopping_lists[0].ShoppingListID,
+				})
+				if err != nil {
+					return err
+				}
+				added = true
+				break
+			}
+			if !added {
+				logger.Log.Warnw("no shopping list found for ingredient, skipping", "ingredient_id", ing.IngredientID, "recipe_id", recipe_id)
 			}
 		}
 		return nil
 	})
-	if err != nil {
-		log.Println("Error adding to shopping list: ", err)
-		return err
-	}
-	return nil
 }
 
 func (s *recipeService) RemoveFromShoppingList(recipe_id uint) error {
-	err := s.storage.DB.Transaction(func(tx *gorm.DB) error {
+	return s.storage.DB.Transaction(func(tx *gorm.DB) error {
+		recipeRepo := s.storage.Recipes.WithTransaction(tx)
 		shoppingListRepo := s.storage.ShoppingLists.WithTransaction(tx)
 
-		recipe, err := s.storage.Recipes.GetByID(recipe_id)
+		recipe, err := recipeRepo.GetByID(recipe_id)
 		if err != nil {
 			return err
 		}
 		for _, ing := range recipe.RecipeIngredients {
-			items, err := shoppingListRepo.GetItemsByIngredientID(ing.IngredientID)
+			items, err := shoppingListRepo.GetItemsByIngredientAndUnit(ing.IngredientID, ing.MeasurementUnitID)
 			if err != nil {
 				return err
 			}
-			if len(items) > 1 {
-				log.Println("more than 1 ingredient entry found in shoppinglist for: ", ing.IngredientID)
-				return err
-			}
-			if len(items) == 0 {
-				log.Println("0 items found in shoppinglist for: ", ing.IngredientID)
-				continue
-			} else {
-				item := items[0]
-				item.Quantity -= ing.Quantity
-				if item.Quantity <= 0 {
-					item.Quantity = 0
-					if err := shoppingListRepo.DeleteItemAssociation(&item); err != nil {
+			remaining := ing.Quantity
+			for i := range items {
+				if remaining <= 0 {
+					break
+				}
+				item := &items[i]
+				if item.Quantity <= remaining {
+					remaining -= item.Quantity
+					if err := shoppingListRepo.DeleteItemAssociation(item); err != nil {
 						return err
 					}
-				} else {
-					if err := shoppingListRepo.UpdateItemAssociation(&item); err != nil {
-						return err
-					}
+					continue
+				}
+				item.Quantity -= remaining
+				remaining = 0
+				if err := shoppingListRepo.UpdateItemAssociation(item); err != nil {
+					return err
 				}
 			}
 		}
 		return nil
 	})
-	if err != nil {
-		log.Println("Error removing from shopping list: ", err)
-		return err
-	}
-	return nil
 }

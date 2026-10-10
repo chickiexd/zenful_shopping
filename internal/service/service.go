@@ -18,6 +18,7 @@ type Service struct {
 		GetByID(uint) (*dto.IngredientResponse, error)
 		GetAll() ([]dto.IngredientResponse, error)
 		AddToShoppingList(*dto.AddIngredientToShoppingListRequest) (*dto.ShoppingListItemResponse, error)
+		AddAlias(*dto.CreateIngredientAliasRequest) error
 	}
 	Pantry interface {
 		GetAll() ([]dto.PantryIngredientResponse, error)
@@ -37,7 +38,7 @@ type Service struct {
 		Create(context.Context, *store.User) error
 	}
 	ChatGPT interface {
-		ParseRecipe(string) (*dto.ParsedRecipe, error)
+		ParseRecipe(context.Context, string) (*dto.ParsedRecipe, error)
 	}
 	ShoppingList interface {
 		GetAll() ([]dto.ShoppingListResponse, error)
@@ -45,7 +46,7 @@ type Service struct {
 		RemoveAllItemsFromShoppingList(uint) error
 	}
 	KeepSync interface {
-		SyncShoppingLists() error
+		SyncShoppingLists(context.Context) error
 	}
 }
 

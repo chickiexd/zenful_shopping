@@ -8,7 +8,7 @@ type Instruction struct {
 	StepNumber    int
 	Description   string
 
-	Recipe Recipe `gorm:"foreignKey:RecipeID"`
+	Recipe Recipe `gorm:"foreignKey:RecipeID;references:RecipeID"`
 }
 
 type InstructionRepository struct {

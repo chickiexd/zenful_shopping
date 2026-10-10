@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -112,12 +113,12 @@ func (h *RecipeHandler) RemoveFromShoppingList(w http.ResponseWriter, r *http.Re
 //	@Description	Accepts multipart/form-data with JSON fields and an image to create a new recipe
 //	@Tags			recipes
 //	@Accept			multipart/form-data
-//	@Produce		plain
+//	@Produce		json
 //	@Param			recipe			formData	string	true	"Recipe JSON string"
 //	@Param			ingredients		formData	string	true	"Ingredients JSON array"
 //	@Param			instructions	formData	string	true	"Instructions JSON array"
 //	@Param			image			formData	file	true	"Recipe image file"
-//	@Success		201				{string}	string	"Recipe created successfully"
+//	@Success		201				{object}	dto.RecipeResponse
 //	@Failure		400				{string}	string	"Bad request"
 //	@Failure		404				{string}	string	"Not found"
 //	@Failure		500				{string}	string	"Internal server error"
@@ -155,8 +156,15 @@ func (h *RecipeHandler) Create(w http.ResponseWriter, r *http.Request) {
 	req.Image = file
 	req.ImageHeader = fileHeader
 
-	h.service.Recipes.Create(&req)
-
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Recipe created successfully"))
+	recipe, err := h.service.Recipes.Create(&req)
+	var validationErr *service.ValidationError
+	if stderrors.As(err, &validationErr) {
+		errors.BadRequest(w, r, err)
+		return
+	}
+	if err != nil {
+		errors.InternalServerError(w, r, err)
+		return
+	}
+	utils.WriteJSON(w, http.StatusCreated, recipe)
 }

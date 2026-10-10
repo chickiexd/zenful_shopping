@@ -1,8 +1,11 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/chickiexd/zenful_shopping/internal/dto"
 	"github.com/chickiexd/zenful_shopping/internal/store"
+	"gorm.io/gorm"
 )
 
 type ShoppingListService struct {
@@ -54,3 +57,22 @@ func (s *ShoppingListService) RemoveAllItemsFromShoppingList(shopping_list_id ui
 	return nil
 }
 
+// addItemToShoppingList adds quantity to the matching item (same list, ingredient
+// and unit) or creates a new item when there is none.
+func addItemToShoppingList(repo *store.ShoppingListRepository, item *store.ShoppingListItem) (*store.ShoppingListItem, error) {
+	existing, err := repo.GetItem(item.ShoppingListID, item.IngredientID, item.MeasurementUnitID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err := repo.CreateItemAssociation(item); err != nil {
+			return nil, err
+		}
+		return item, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	existing.Quantity += item.Quantity
+	if err := repo.UpdateItemAssociation(existing); err != nil {
+		return nil, err
+	}
+	return existing, nil
+}

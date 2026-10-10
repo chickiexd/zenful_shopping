@@ -14,7 +14,7 @@ type Recipe struct {
 	Servings          int
 	ImagePath         string
 	MealTypeID        uint
-	MealType          MealType           `gorm:"foreignKey:MealTypeID"`
+	MealType          MealType           `gorm:"foreignKey:MealTypeID;references:MealTypeID"`
 	RecipeIngredients []RecipeIngredient `gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE;"`
 	Ingredients       []Ingredient       `gorm:"many2many:recipe_ingredients;joinForeignKey:RecipeID;joinReferences:IngredientID"`
 	Instructions      []Instruction      `gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE;"`
@@ -27,8 +27,8 @@ type RecipeIngredient struct {
 	IngredientID      uint `gorm:"primaryKey"`
 	MeasurementUnitID uint
 	Quantity          float64
-	Ingredient        Ingredient      `gorm:"foreignKey:IngredientID"`
-	MeasurementUnit   MeasurementUnit `gorm:"foreignKey:MeasurementUnitID"`
+	Ingredient        Ingredient      `gorm:"foreignKey:IngredientID;references:IngredientID"`
+	MeasurementUnit   MeasurementUnit `gorm:"foreignKey:MeasurementUnitID;references:MeasurementUnitID"`
 }
 
 type RecipeRepository struct {

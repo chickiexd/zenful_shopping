@@ -9,11 +9,13 @@ import (
 type Storage struct {
 	DB      *gorm.DB
 	Recipes interface {
+		WithTransaction(*gorm.DB) *RecipeRepository
 		GetAll() ([]Recipe, error)
 		Create(*Recipe) error
 		GetByID(uint) (*Recipe, error)
 	}
 	Ingredients interface {
+		WithTransaction(*gorm.DB) *IngredientRepository
 		Create(*Ingredient) error
 		GetByID(uint) (*Ingredient, error)
 		GetByName(string) (*Ingredient, error)
@@ -22,6 +24,7 @@ type Storage struct {
 		GetFoodGroupsByID(uint) ([]FoodGroup, error)
 	}
 	Pantry interface {
+		WithTransaction(*gorm.DB) *PantryRepository
 		GetAll() ([]PantryIngredient, error)
 		Create(*PantryIngredient) (*PantryIngredient, error)
 		Delete(*PantryIngredient) error
@@ -43,6 +46,14 @@ type Storage struct {
 		GetByID(uint) (*FoodGroup, error)
 		GetByName(string) (*FoodGroup, error)
 	}
+	Aliases interface {
+		WithTransaction(*gorm.DB) *AliasRepository
+		GetIngredientByAlias(string) (*Ingredient, error)
+		Upsert(*IngredientAlias) error
+	}
+	MealTypes interface {
+		GetAll() ([]MealType, error)
+	}
 	Users interface {
 		Create(context.Context, *User) error
 	}
@@ -59,7 +70,8 @@ type Storage struct {
 		CreateFoodGroupAssociation(*ShoppingList, *FoodGroup) error
 		CreateIngredientAssociation(*ShoppingListItem) error
 		GetByFoodGroupID(uint) ([]ShoppingList, error)
-		GetItemsByIngredientID(uint) ([]ShoppingListItem, error)
+		GetItem(uint, uint, uint) (*ShoppingListItem, error)
+		GetItemsByIngredientAndUnit(uint, uint) ([]ShoppingListItem, error)
 		GetItemsByShoppingListID(uint) ([]ShoppingListItem, error)
 		CreateItemAssociation(*ShoppingListItem) error
 		DeleteItemAssociation(*ShoppingListItem) error
@@ -80,5 +92,7 @@ func NewStorage(db *gorm.DB) Storage {
 		Instructions:     &InstructionRepository{db},
 		ShoppingLists:    &ShoppingListRepository{db},
 		Pantry:           &PantryRepository{db},
+		Aliases:          &AliasRepository{db},
+		MealTypes:        &MealTypeRepository{db},
 	}
 }
