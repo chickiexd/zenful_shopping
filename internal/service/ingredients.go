@@ -1,7 +1,10 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/chickiexd/zenful_shopping/internal/dto"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 
@@ -19,8 +22,17 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*dt
 		measurementUnitsRepo := s.storage.MeasurementUnits.(*store.MeasurementRepository).WithTransaction(tx)
 		foodGroupsRepo := s.storage.FoodGroups.(*store.FoodGroupRepository).WithTransaction(tx)
 
+		if strings.TrimSpace(ingredient.Name) == "" {
+			return validationErrorf("ingredient name must not be empty")
+		}
+		if _, err := ingredientsRepo.GetByName(ingredient.Name); err == nil {
+			return validationErrorf("an ingredient named %q already exists", ingredient.Name)
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 		created_ingredient = &store.Ingredient{
-			Name: ingredient.Name,
+			Name:        strings.TrimSpace(ingredient.Name),
+			Description: ingredient.Description,
 		}
 		if err := ingredientsRepo.Create(created_ingredient); err != nil {
 			return err
@@ -48,21 +60,15 @@ func (s *ingredientService) Create(ingredient *dto.CreateIngredientRequest) (*dt
 			}
 		}
 
-		for _, new_food_group := range ingredient.FoodGroups {
-			var food_group *store.FoodGroup
-			result, err := foodGroupsRepo.GetByName(new_food_group)
-			if err != nil && err == gorm.ErrRecordNotFound {
-				if new_food_group == "" {
-					return fmt.Errorf("food group name cannot be empty")
-				}
-				food_group = &store.FoodGroup{Name: new_food_group}
-				if err := foodGroupsRepo.Create(food_group); err != nil {
-					return err
-				}
-			} else if err != nil {
+		for _, food_group_name := range ingredient.FoodGroups {
+			food_group, err := foodGroupsRepo.GetByName(food_group_name)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// creating it here would leave it without a shopping list, so the
+				// ingredient would never be added to one
+				return validationErrorf("food group %q does not exist yet; create it with a shopping list first", food_group_name)
+			}
+			if err != nil {
 				return err
-			} else {
-				food_group = result
 			}
 			if err := ingredientsRepo.CreateFoodGroupAssociation(created_ingredient, food_group); err != nil {
 				return err

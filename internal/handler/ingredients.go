@@ -33,8 +33,13 @@ func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	created_ingredient, err := h.service.Ingredients.Create(&ingredient)
+	var validationErr *service.ValidationError
+	if stderrors.As(err, &validationErr) {
+		errors.BadRequest(w, r, err)
+		return
+	}
 	if err != nil {
-		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		errors.InternalServerError(w, r, err)
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, created_ingredient)

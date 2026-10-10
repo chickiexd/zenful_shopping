@@ -36,13 +36,13 @@ type MeasurementUnitResponse struct {
 
 type CreateRecipeRequest struct {
 	Recipe       RecipeRequest         `json:"recipe" form:"recipe"`
-	Ingredients  []ingredientRequest   `json:"ingredients"`
+	Ingredients  []IngredientRequest   `json:"ingredients"`
 	Instructions []InstructionRequest  `json:"instructions"`
 	Image        multipart.File        `form:"-"`
 	ImageHeader  *multipart.FileHeader `form:"-"`
 }
 
-type ingredientRequest struct {
+type IngredientRequest struct {
 	IngredientID      uint    `json:"ingredient_id"`
 	Quantity          float64 `json:"quantity"`
 	MeasurementUnitID uint    `json:"measurement_unit_id"`
@@ -68,11 +68,23 @@ type AddRecipeToShoppingListRequest struct {
 
 // returned to the client
 type ParsedRecipe struct {
-	Recipe         RecipeRequest              `json:"recipe" form:"recipe"`
-	Ingredients    []RecipeIngredientResponse `json:"ingredients"`
-	Instructions   []InstructionRequest       `json:"instructions"`
-	NewIngredients []ParsedIngredient         `json:"new_ingredients"`
-	NewFoodGrops   []ParsedFoodGroup          `json:"new_food_groups"`
+	Recipe         RecipeRequest            `json:"recipe" form:"recipe"`
+	Ingredients    []ParsedRecipeIngredient `json:"ingredients"`
+	Instructions   []InstructionRequest     `json:"instructions"`
+	NewIngredients []ParsedIngredient       `json:"new_ingredients"`
+	NewFoodGrops   []ParsedFoodGroup        `json:"new_food_groups"`
+	Warnings       []string                 `json:"warnings"`
+}
+
+// ParsedRecipeIngredient is an ingredient matched to an existing one.
+type ParsedRecipeIngredient struct {
+	IngredientID      uint    `json:"ingredient_id"`
+	IngredientName    string  `json:"ingredient_name"`
+	OriginalName      string  `json:"original_name"`
+	Quantity          float64 `json:"quantity"`
+	MeasurementUnitID uint    `json:"measurement_unit_id"`
+	// MatchedBy is "model", "alias" or "name"
+	MatchedBy string `json:"matched_by"`
 }
 
 type ParsedIngredient struct {

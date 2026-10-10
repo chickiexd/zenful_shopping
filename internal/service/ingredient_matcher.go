@@ -71,12 +71,19 @@ func newIngredientMatcher(aliases *store.AliasRepository, catalog []store.Ingred
 	return m
 }
 
-// resolve returns the matching ingredient or nil when the ingredient is new.
-// Order: the model's pick from the catalog, remembered aliases for the
-// original and canonical name, then the normalized canonical name.
-func (m *ingredientMatcher) resolve(existing, original, name string) (*store.Ingredient, error) {
+// how an ingredient was matched, reported to the import review
+const (
+	matchedByModel = "model"
+	matchedByAlias = "alias"
+	matchedByName  = "name"
+)
+
+// resolve returns the matching ingredient and how it was matched, or nil when
+// the ingredient is new. Order: the model's pick from the catalog, remembered
+// aliases for the original and canonical name, then the normalized canonical name.
+func (m *ingredientMatcher) resolve(existing, original, name string) (*store.Ingredient, string, error) {
 	if ing, ok := m.byName[strings.ToLower(strings.TrimSpace(existing))]; ok && existing != "" {
-		return &ing, nil
+		return &ing, matchedByModel, nil
 	}
 	for _, candidate := range []string{original, name} {
 		key := normalizeName(candidate)
@@ -85,14 +92,38 @@ func (m *ingredientMatcher) resolve(existing, original, name string) (*store.Ing
 		}
 		ing, err := m.aliases.GetIngredientByAlias(key)
 		if err == nil {
-			return ing, nil
+			return ing, matchedByAlias, nil
 		}
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
+			return nil, "", err
 		}
 	}
 	if ing, ok := m.byNormKey[normalizeName(name)]; ok {
-		return &ing, nil
+		return &ing, matchedByName, nil
 	}
-	return nil, nil
+	return nil, "", nil
+}
+
+// unit sizes in a common base (gram or milliliter) for merging quantities
+var unitSizes = map[string]struct {
+	dimension string
+	factor    float64
+}{
+	"gram":       {"mass", 1},
+	"kilogram":   {"mass", 1000},
+	"milliliter": {"volume", 1},
+	"liter":      {"volume", 1000},
+	"teaspoon":   {"volume", 5},
+	"tablespoon": {"volume", 15},
+	"cup":        {"volume", 240},
+}
+
+// convertQuantity converts quantity between two units of the same dimension.
+func convertQuantity(quantity float64, from, to string) (float64, bool) {
+	f, okFrom := unitSizes[strings.ToLower(from)]
+	t, okTo := unitSizes[strings.ToLower(to)]
+	if !okFrom || !okTo || f.dimension != t.dimension {
+		return 0, false
+	}
+	return quantity * f.factor / t.factor, true
 }

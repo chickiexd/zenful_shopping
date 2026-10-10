@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -156,6 +157,11 @@ func (h *RecipeHandler) Create(w http.ResponseWriter, r *http.Request) {
 	req.ImageHeader = fileHeader
 
 	recipe, err := h.service.Recipes.Create(&req)
+	var validationErr *service.ValidationError
+	if stderrors.As(err, &validationErr) {
+		errors.BadRequest(w, r, err)
+		return
+	}
 	if err != nil {
 		errors.InternalServerError(w, r, err)
 		return

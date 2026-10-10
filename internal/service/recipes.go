@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/chickiexd/zenful_shopping/internal/dto"
 	"github.com/chickiexd/zenful_shopping/internal/logger"
@@ -19,6 +20,9 @@ type recipeService struct {
 func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeResponse, error) {
 	var created_recipe *store.Recipe
 
+	if err := s.validate(req); err != nil {
+		return nil, err
+	}
 	image_name, err := utils.SaveImageLocally(req.Image, req.ImageHeader)
 	if err != nil {
 		return nil, err
@@ -109,6 +113,35 @@ func (s *recipeService) Create(req *dto.CreateRecipeRequest) (*dto.RecipeRespons
 		Instructions: instructions,
 	}
 	return recipe_response, nil
+}
+
+// validate checks what the database would otherwise reject with an unhelpful error.
+func (s *recipeService) validate(req *dto.CreateRecipeRequest) error {
+	if strings.TrimSpace(req.Recipe.Title) == "" {
+		return validationErrorf("the recipe needs a title")
+	}
+	seen := map[uint]bool{}
+	for _, ing := range req.Ingredients {
+		if ing.IngredientID == 0 || ing.MeasurementUnitID == 0 {
+			return validationErrorf("every ingredient needs an ingredient and a unit")
+		}
+		if ing.Quantity < 0 {
+			return validationErrorf("ingredient quantities must not be negative")
+		}
+		ingredient, err := s.storage.Ingredients.GetByID(ing.IngredientID)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return validationErrorf("ingredient %d does not exist", ing.IngredientID)
+		}
+		if err != nil {
+			return err
+		}
+		// recipe_ingredients is keyed by (recipe_id, ingredient_id)
+		if seen[ing.IngredientID] {
+			return validationErrorf("%s is listed more than once; combine it into one line", ingredient.Name)
+		}
+		seen[ing.IngredientID] = true
+	}
+	return nil
 }
 
 func (s *recipeService) GetAll() ([]dto.RecipeResponse, error) {

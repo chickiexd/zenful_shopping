@@ -32,9 +32,14 @@ type OpenAIService struct {
 }
 
 func NewOpenAIService(storage *store.Storage) *OpenAIService {
+	config := openai.DefaultConfig(env.GetString("OPENAI_API_KEY", ""))
+	// lets the API be reached through a proxy or a compatible service
+	if baseURL := env.GetString("OPENAI_BASE_URL", ""); baseURL != "" {
+		config.BaseURL = baseURL
+	}
 	return &OpenAIService{
 		llm: &openAICompleter{
-			client: openai.NewClient(env.GetString("OPENAI_API_KEY", "")),
+			client: openai.NewClientWithConfig(config),
 			model:  env.GetString("OPENAI_MODEL", openai.GPT4oMini),
 		},
 		storage: storage,
@@ -229,9 +234,12 @@ Ingredient names:
 - "name" is the canonical English name: singular, Title Case, only the product you would buy.
   Drop preparation and size words (chopped, gehackt, fresh, large, fein, gewürfelt).
   Keep a variety when it changes what you buy (Brown Sugar, Red Onion, Greek Yogurt).
-- If the ingredient is the same thing as one in the known ingredient list, put that exact
-  name in "existing_ingredient" (also for plurals, translations and preparations of it,
-  e.g. "Knoblauchzehen" -> "Garlic", "chopped onions" -> "Onion"). Otherwise use "".
+- If the ingredient is the same product as one in the known ingredient list, put that exact
+  name in "existing_ingredient". Plurals, translations, sizes and preparations count as the
+  same product ("Knoblauchzehen" -> "Garlic", "chopped onions" -> "Onion").
+  A different product you would buy separately is NOT the same, even if the names overlap:
+  Coconut Milk is not Whole Milk, Sweet Potato is not Potato, Tomato Paste is not Tomato.
+  When unsure, use "".
 - "original_text" is the name as written in the recipe.
 
 Quantities and units (unit must be one of the allowed units):
@@ -296,9 +304,10 @@ func (s *OpenAIService) buildParsedRecipe(c *parseCatalog, parsed *llmRecipe) (*
 			CookTime:    parsed.CookTime,
 			Servings:    parsed.Servings,
 		},
-		Ingredients:    []dto.RecipeIngredientResponse{},
+		Ingredients:    []dto.ParsedRecipeIngredient{},
 		NewIngredients: []dto.ParsedIngredient{},
 		NewFoodGrops:   []dto.ParsedFoodGroup{},
+		Warnings:       []string{},
 	}
 	for _, m := range c.mealTypes {
 		if strings.EqualFold(m.Name, parsed.MealType) {
@@ -356,39 +365,58 @@ func (s *OpenAIService) buildParsedRecipe(c *parseCatalog, parsed *llmRecipe) (*
 	}
 
 	matcher := newIngredientMatcher(s.storage.Aliases.WithTransaction(s.storage.DB), c.ingredients)
-	type lineKey struct {
-		ingredient string
-		unit       uint
+	unitNames := make(map[uint]string, len(c.units))
+	for _, u := range c.units {
+		unitNames[u.MeasurementUnitID] = u.Name
 	}
-	matchedIdx := map[lineKey]int{}
-	newIdx := map[lineKey]int{}
+	// a recipe holds each ingredient once, so repeated lines are merged into the
+	// first one, converting units of the same dimension
+	merge := func(name string, quantity *float64, unitID uint, addQuantity float64, addUnit store.MeasurementUnit) {
+		if addUnit.MeasurementUnitID == unitID {
+			*quantity += addQuantity
+			return
+		}
+		if converted, ok := convertQuantity(addQuantity, addUnit.Name, unitNames[unitID]); ok {
+			*quantity += converted
+			return
+		}
+		result.Warnings = append(result.Warnings, fmt.Sprintf(
+			"%s is listed more than once in units that cannot be combined (%s and %s); only %g %s was kept",
+			name, unitNames[unitID], addUnit.Name, *quantity, unitNames[unitID]))
+	}
+	matchedIdx := map[uint]int{}
+	newIdx := map[string]int{}
 	for _, ing := range parsed.Ingredients {
 		unit, err := unitFor(ing.Unit)
 		if err != nil {
 			return nil, err
 		}
-		existing, err := matcher.resolve(ing.ExistingIngredient, ing.OriginalText, ing.Name)
+		existing, matchedBy, err := matcher.resolve(ing.ExistingIngredient, ing.OriginalText, ing.Name)
 		if err != nil {
 			return nil, err
 		}
 		if existing != nil {
-			key := lineKey{fmt.Sprint(existing.IngredientID), unit.MeasurementUnitID}
-			if i, ok := matchedIdx[key]; ok {
-				result.Ingredients[i].Quantity += ing.Quantity
+			if i, ok := matchedIdx[existing.IngredientID]; ok {
+				line := &result.Ingredients[i]
+				merge(existing.Name, &line.Quantity, line.MeasurementUnitID, ing.Quantity, unit)
 				continue
 			}
-			matchedIdx[key] = len(result.Ingredients)
-			result.Ingredients = append(result.Ingredients, dto.RecipeIngredientResponse{
+			matchedIdx[existing.IngredientID] = len(result.Ingredients)
+			result.Ingredients = append(result.Ingredients, dto.ParsedRecipeIngredient{
 				IngredientID:      existing.IngredientID,
+				IngredientName:    existing.Name,
+				OriginalName:      strings.TrimSpace(ing.OriginalText),
 				Quantity:          ing.Quantity,
 				MeasurementUnitID: unit.MeasurementUnitID,
+				MatchedBy:         matchedBy,
 			})
 			continue
 		}
 
-		key := lineKey{normalizeName(ing.Name), unit.MeasurementUnitID}
+		key := normalizeName(ing.Name)
 		if i, ok := newIdx[key]; ok {
-			result.NewIngredients[i].Quantity += ing.Quantity
+			line := &result.NewIngredients[i]
+			merge(line.Name, &line.Quantity, line.MeasurementUnitID, ing.Quantity, unit)
 			continue
 		}
 		groups := []dto.ParsedFoodGroup{}
