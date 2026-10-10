@@ -2,6 +2,7 @@ services:
   zenful_shopping_backend:
     build: .
     container_name: zenful_shopping_backend
+    restart: unless-stopped
     environment:
       - ADDR=${ADDR}
       - DB_HOST=${DB_HOST}
@@ -16,11 +17,8 @@ services:
     volumes:
       - ${FILE_STORAGE_PATH}:/app/file_storage
     networks:
-      - nginx_net
       - zenful_shopping
 
 networks:
-  nginx_net:
-    external: true
   zenful_shopping:
     external: true
