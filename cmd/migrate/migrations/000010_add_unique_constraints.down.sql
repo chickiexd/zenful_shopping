@@ -1,0 +1,2 @@
+ALTER TABLE pantry_ingredients DROP CONSTRAINT IF EXISTS pantry_ingredients_ingredient_id_key;
+ALTER TABLE shopping_list_items DROP CONSTRAINT IF EXISTS shopping_list_items_list_ingredient_unit_key;

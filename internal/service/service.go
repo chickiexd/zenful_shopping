@@ -37,7 +37,7 @@ type Service struct {
 		Create(context.Context, *store.User) error
 	}
 	ChatGPT interface {
-		ParseRecipe(string) (*dto.ParsedRecipe, error)
+		ParseRecipe(context.Context, string) (*dto.ParsedRecipe, error)
 	}
 	ShoppingList interface {
 		GetAll() ([]dto.ShoppingListResponse, error)
@@ -45,7 +45,7 @@ type Service struct {
 		RemoveAllItemsFromShoppingList(uint) error
 	}
 	KeepSync interface {
-		SyncShoppingLists() error
+		SyncShoppingLists(context.Context) error
 	}
 }
 

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"github.com/chickiexd/zenful_shopping/internal/dto"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 )
@@ -11,7 +10,6 @@ type MeasurementUnitService struct {
 }
 
 func (s *MeasurementUnitService) Create(ingredient *dto.CreateMeasurementUnit) error {
-	log.Println("service create ingredient_id")
 	return s.storage.MeasurementUnits.Create(nil)
 }
 

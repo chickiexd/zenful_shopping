@@ -21,9 +21,9 @@ type ShoppingListItem struct {
 	IngredientID       uint
 	MeasurementUnitID  uint
 	Quantity           float64         `gorm:"not null"`
-	ShoppingList       ShoppingList    `gorm:"foreignKey:ShoppingListID"`
-	Ingredient         Ingredient      `gorm:"foreignKey:IngredientID"`
-	MeasurementUnit    MeasurementUnit `gorm:"foreignKey:MeasurementUnitID"`
+	ShoppingList       ShoppingList    `gorm:"foreignKey:ShoppingListID;references:ShoppingListID"`
+	Ingredient         Ingredient      `gorm:"foreignKey:IngredientID;references:IngredientID"`
+	MeasurementUnit    MeasurementUnit `gorm:"foreignKey:MeasurementUnitID;references:MeasurementUnitID"`
 	CreatedAt          time.Time       `gorm:"autoCreateTime"`
 	UpdatedAt          time.Time       `gorm:"autoUpdateTime"`
 }
@@ -81,13 +81,24 @@ func (r *ShoppingListRepository) GetByFoodGroupID(id uint) ([]ShoppingList, erro
 	return shoppingLists, err
 }
 
-func (r *ShoppingListRepository) GetItemsByIngredientID(id uint) ([]ShoppingListItem, error) {
+// GetItem returns the item for an ingredient in a given unit on a given list,
+// or gorm.ErrRecordNotFound if there is none.
+func (r *ShoppingListRepository) GetItem(shopping_list_id, ingredient_id, measurement_unit_id uint) (*ShoppingListItem, error) {
+	var item ShoppingListItem
+	err := r.db.
+		Where("shopping_list_id = ? AND ingredient_id = ? AND measurement_unit_id = ?", shopping_list_id, ingredient_id, measurement_unit_id).
+		First(&item).Error
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (r *ShoppingListRepository) GetItemsByIngredientAndUnit(ingredient_id, measurement_unit_id uint) ([]ShoppingListItem, error) {
 	var items []ShoppingListItem
 	err := r.db.
-		Preload("ShoppingList").
-		Preload("Ingredient").
-		Preload("MeasurementUnit").
-		Where("ingredient_id = ?", id).
+		Where("ingredient_id = ? AND measurement_unit_id = ?", ingredient_id, measurement_unit_id).
+		Order("shopping_list_item_id").
 		Find(&items).Error
 	return items, err
 }

@@ -14,6 +14,10 @@ type PantryRepository struct {
 	db *gorm.DB
 }
 
+func (r *PantryRepository) WithTransaction(tx *gorm.DB) *PantryRepository {
+	return &PantryRepository{db: tx}
+}
+
 func (r *PantryRepository) GetAll() ([]PantryIngredient, error) {
 	var pantry_ingredients []PantryIngredient
 	err := r.db.

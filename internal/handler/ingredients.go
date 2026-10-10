@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/chickiexd/zenful_shopping/internal/dto"
@@ -32,7 +31,6 @@ func (h *IngredientHandler) Create(w http.ResponseWriter, r *http.Request) {
 		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	log.Println("created_ingredient: ", created_ingredient)
 	utils.WriteJSON(w, http.StatusOK, created_ingredient)
 }
 

@@ -63,13 +63,11 @@ def sync(data):
     username = os.getenv("GOOGLE_USERNAME")
     master_token = os.getenv("GOOGLE_TOKEN")
     if not master_token:
-        print(
+        sys.exit(
             "No master token found. Please set the GOOGLE_TOKEN environment variable."
         )
-        return
     if not username:
-        print("No username found. Please set the GOOGLE_USERNAME environment variable.")
-        return
+        sys.exit("No username found. Please set the GOOGLE_USERNAME environment variable.")
 
     keep = gkeepapi.Keep()
     keep.authenticate(username, master_token)

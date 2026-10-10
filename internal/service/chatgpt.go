@@ -27,13 +27,34 @@ type newIngredientFound struct {
 	MeasurementUnitID uint
 }
 
+// model used for all completions; gpt-3.5-turbo is a legacy model
+const openAIModel = openai.GPT4oMini
+
+// complete sends a single system+user prompt and returns the reply text.
+func (s *OpenAIService) complete(ctx context.Context, system, prompt string) (string, error) {
+	response, err := s.Client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: openAIModel,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: openai.ChatMessageRoleSystem, Content: system},
+			{Role: openai.ChatMessageRoleUser, Content: prompt},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(response.Choices) == 0 {
+		return "", fmt.Errorf("openai returned no choices")
+	}
+	return response.Choices[0].Message.Content, nil
+}
+
 func NewOpenAIService(storage *store.Storage) *OpenAIService {
 	api_key := env.GetString("OPENAI_API_KEY", "")
 	client := openai.NewClient(api_key)
 	return &OpenAIService{Client: client, storage: storage}
 }
 
-func (s *OpenAIService) getShoppingListForFoodGroup(food_group_name string) (string, error) {
+func (s *OpenAIService) getShoppingListForFoodGroup(ctx context.Context, food_group_name string) (string, error) {
 	shopping_lists, err := s.storage.ShoppingLists.GetAll()
 	if err != nil {
 		logger.Log.Errorw("Error getting shopping lists", "error", err)
@@ -56,30 +77,17 @@ func (s *OpenAIService) getShoppingListForFoodGroup(food_group_name string) (str
 	Remember to always add "" around the keys for json parsing support.
 	`, food_group_name, shopping_lists_str)
 
-	ctx := context.Background()
-	response, err := s.Client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: openai.GPT3Dot5Turbo,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    "system",
-				Content: "You are a helpful assistant that returns structured data for a shoppinglist.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-	})
+	content, err := s.complete(ctx, "You are a helpful assistant that returns structured data for a shoppinglist.", prompt)
 	if err != nil {
 		logger.Log.Errorw("Error creating chat completion during shoppinglist queue", "error", err)
 		return "", err
 	}
 	var shopping_list dto.ShoppingListName
-	err = json.Unmarshal([]byte(response.Choices[0].Message.Content), &shopping_list)
+	err = json.Unmarshal([]byte(content), &shopping_list)
 	return shopping_list.Name, err
 }
 
-func (s *OpenAIService) createIngredient(ingredient_name string) (*dto.ParsedIngredientInformation, error) {
+func (s *OpenAIService) createIngredient(ctx context.Context, ingredient_name string) (*dto.ParsedIngredientInformation, error) {
 	food_groups, err := s.storage.FoodGroups.GetAll()
 	if err != nil {
 		logger.Log.Errorw("Error getting food groups", "error", err)
@@ -105,31 +113,17 @@ func (s *OpenAIService) createIngredient(ingredient_name string) (*dto.ParsedIng
 	Remember to always add "" around the keys for json parsing support.
 	`, ingredient_name, food_groups_str)
 
-	ctx := context.Background()
-	response, err := s.Client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: openai.GPT3Dot5Turbo,
-		// Model: openai.GPT4oMini,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    "system",
-				Content: "You are a helpful assistant that returns structured data for ingredients that are supposed to be in recipes.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-	})
+	content, err := s.complete(ctx, "You are a helpful assistant that returns structured data for ingredients that are supposed to be in recipes.", prompt)
 	if err != nil {
 		logger.Log.Errorw("Error creating chat completion during ingredient creation", "error", err)
 		return nil, err
 	}
 	var ingredient dto.ParsedIngredientInformation
-	err = json.Unmarshal([]byte(response.Choices[0].Message.Content), &ingredient)
+	err = json.Unmarshal([]byte(content), &ingredient)
 	return &ingredient, err
 }
 
-func (s *OpenAIService) getIngredientsAndFoodGroups(ingredients []newIngredientFound) ([]dto.ParsedMultipleIngredientInformation, error) {
+func (s *OpenAIService) getIngredientsAndFoodGroups(ctx context.Context, ingredients []newIngredientFound) ([]dto.ParsedMultipleIngredientInformation, error) {
 	food_groups, err := s.storage.FoodGroups.GetAll()
 	if err != nil {
 		logger.Log.Errorw("Error getting food groups", "error", err)
@@ -168,33 +162,18 @@ func (s *OpenAIService) getIngredientsAndFoodGroups(ingredients []newIngredientF
 	Remember to always add "" around the keys for json parsing support.
 	`, string(ingredients_str), food_groups_str)
 
-	ctx := context.Background()
-	response, err := s.Client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		Model: openai.GPT3Dot5Turbo,
-		// Model: openai.GPT4oMini,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    "system",
-				Content: "You are a helpful assistant that returns structured data for ingredients that are supposed to be in recipes.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-	})
+	content, err := s.complete(ctx, "You are a helpful assistant that returns structured data for ingredients that are supposed to be in recipes.", prompt)
 	if err != nil {
 		logger.Log.Errorw("Error creating chat completion during ingredient parsing", "error", err)
 		return nil, err
 	}
-	content := response.Choices[0].Message.Content
 
 	var parsed_ingredients []dto.ParsedMultipleIngredientInformation
 	err = json.Unmarshal([]byte(content), &parsed_ingredients)
 	return parsed_ingredients, err
 }
 
-func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error) {
+func (s *OpenAIService) ParseRecipe(ctx context.Context, recipeText string) (*dto.ParsedRecipe, error) {
 	prompt := fmt.Sprintf(`
 	Please parse this recipe:
 
@@ -208,30 +187,16 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 	Remember to always add "" around the keys for json parsing support. and the quantity should always be float value so if u get a range like 1-2 return the center so 1.5 in that case.
 	`, recipeText)
 
-	ctx := context.Background()
-	response, err := s.Client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-		// Model: openai.GPT3Dot5Turbo,
-		Model: openai.GPT4oMini,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    "system",
-				Content: "You are a helpful assistant that returns structured data from recipes.",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-	})
+	content, err := s.complete(ctx, "You are a helpful assistant that returns structured data from recipes.", prompt)
 	if err != nil {
 		logger.Log.Errorw("Error creating chat completion during recipe parsing", "error", err)
 		return nil, err
 	}
 
 	var recipe dto.ParsedRecipeInformation
-	err = json.Unmarshal([]byte(response.Choices[0].Message.Content), &recipe)
+	err = json.Unmarshal([]byte(content), &recipe)
 	if err != nil {
-		logger.Log.Errorw("Error unmarshalling recipe", "error", err, "response", response.Choices[0].Message.Content)
+		logger.Log.Errorw("Error unmarshalling recipe", "error", err, "response", content)
 		return nil, err
 	}
 
@@ -267,7 +232,7 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 		}
 
 	}
-	parsed_ingredients, parsed_foodgroups, err := s.ParseNewIngredients(new_ingredients)
+	parsed_ingredients, parsed_foodgroups, err := s.ParseNewIngredients(ctx, new_ingredients)
 	if err != nil {
 		logger.Log.Errorw("Error parsing new ingredients", "error", err)
 		return nil, err
@@ -280,10 +245,10 @@ func (s *OpenAIService) ParseRecipe(recipeText string) (*dto.ParsedRecipe, error
 	return &response_recipe, nil
 }
 
-func (s *OpenAIService) ParseNewIngredient(ingredient_name string) (*dto.ParsedIngredient, []dto.ParsedFoodGroup, error) {
+func (s *OpenAIService) ParseNewIngredient(ctx context.Context, ingredient_name string) (*dto.ParsedIngredient, []dto.ParsedFoodGroup, error) {
 	parsed_ingredient := &dto.ParsedIngredient{}
 	var new_parsed_food_groups []dto.ParsedFoodGroup
-	parsed_ingredient_info, err := s.createIngredient(ingredient_name)
+	parsed_ingredient_info, err := s.createIngredient(ctx, ingredient_name)
 	if err != nil {
 		logger.Log.Errorw("Error creating ingredient", "ingredient_name", ingredient_name, "error", err)
 		return nil, nil, err
@@ -292,7 +257,7 @@ func (s *OpenAIService) ParseNewIngredient(ingredient_name string) (*dto.ParsedI
 		_, err := s.storage.FoodGroups.GetByName(food_group)
 		if err == gorm.ErrRecordNotFound {
 			logger.Log.Infow("Food group not found, creating new food group", "food_group_name", food_group)
-			shopping_list, err := s.getShoppingListForFoodGroup(food_group)
+			shopping_list, err := s.getShoppingListForFoodGroup(ctx, food_group)
 			new_food_group := &dto.ParsedFoodGroup{
 				Name:          food_group,
 				ShoppingLists: shopping_list,
@@ -319,10 +284,10 @@ func (s *OpenAIService) ParseNewIngredient(ingredient_name string) (*dto.ParsedI
 	return parsed_ingredient, new_parsed_food_groups, nil
 }
 
-func (s *OpenAIService) ParseNewIngredients(new_ingredients []newIngredientFound) ([]dto.ParsedIngredient, []dto.ParsedFoodGroup, error) {
+func (s *OpenAIService) ParseNewIngredients(ctx context.Context, new_ingredients []newIngredientFound) ([]dto.ParsedIngredient, []dto.ParsedFoodGroup, error) {
 	var parsed_ingredients []dto.ParsedIngredient
 	var new_parsed_food_groups []dto.ParsedFoodGroup
-	parsed_ingredients_info, err := s.getIngredientsAndFoodGroups(new_ingredients)
+	parsed_ingredients_info, err := s.getIngredientsAndFoodGroups(ctx, new_ingredients)
 	if err != nil {
 		logger.Log.Errorw("Error getting ingredients and food groups", "error", err)
 		return nil, nil, err
@@ -340,7 +305,7 @@ func (s *OpenAIService) ParseNewIngredients(new_ingredients []newIngredientFound
 			_, err := s.storage.FoodGroups.GetByName(food_group)
 			if err == gorm.ErrRecordNotFound {
 				logger.Log.Infow("Food group not found, creating new food group", "food_group_name", food_group)
-				shopping_list, err := s.getShoppingListForFoodGroup(food_group)
+				shopping_list, err := s.getShoppingListForFoodGroup(ctx, food_group)
 				new_food_group := &dto.ParsedFoodGroup{
 					Name:          food_group,
 					ShoppingLists: shopping_list,

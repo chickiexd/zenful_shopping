@@ -1,8 +1,8 @@
 package service
 
 import (
-	"log"
 	"github.com/chickiexd/zenful_shopping/internal/dto"
+	"github.com/chickiexd/zenful_shopping/internal/logger"
 	"github.com/chickiexd/zenful_shopping/internal/store"
 
 	"gorm.io/gorm"
@@ -36,7 +36,7 @@ func (s *FoodGroupService) Create(food_group *dto.CreateFoodGroupRequest) (*stor
 		return nil
 	})
 	if err != nil {
-		log.Println("Error creating food group: ", err)
+		logger.Log.Errorw("error creating food group", "error", err)
 		return nil, err
 	}
 	return created_food_group, nil

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/chickiexd/zenful_shopping/internal/dto"
@@ -14,7 +13,6 @@ type MeasurementUnitHandler struct {
 }
 
 func (h *MeasurementUnitHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	log.Println("get all")
 	measurements, err := h.service.MeasurmentUnits.GetAll();
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusNotFound, err.Error())
@@ -23,7 +21,6 @@ func (h *MeasurementUnitHandler) GetAll(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *MeasurementUnitHandler) Create(w http.ResponseWriter, r *http.Request) {
-	log.Println("create")
 	var measurement dto.CreateMeasurementUnit
 	if err := utils.ReadJSON(w, r, &measurement); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())

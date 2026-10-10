@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -63,8 +62,8 @@ func (app *application) mount() http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
 
-		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
-		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
+		// relative so it also resolves behind the nginx /api/ prefix
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("doc.json")))
 
 		r.Route("/ingredients", func(r chi.Router) {
 			r.Get("/", app.handler.Ingredients.GetAll)
@@ -101,7 +100,7 @@ func (app *application) mount() http.Handler {
 			r.Post("/remove_all_items", app.handler.ShoppingList.RemoveAllItemsFromShoppingList)
 		})
 		r.Route("/sync", func(r chi.Router) {
-			r.Get("/", app.handler.KeepSync.SyncShoppingLists)
+			r.Post("/", app.handler.KeepSync.SyncShoppingLists)
 		})
 	})
 

@@ -12,13 +12,16 @@ import (
 	"github.com/google/uuid"
 )
 
-func SaveImageLocally(file multipart.File, header *multipart.FileHeader) (string, error) {
-	defer file.Close()
+// ImagePath returns the on-disk location of a stored recipe image.
+func ImagePath(file_name string) string {
+	file_storage := env.GetString("FILE_STORAGE_PATH", "/app/file_storage")
+	return filepath.Join(file_storage, "recipes", file_name)
+}
 
+func SaveImageLocally(file multipart.File, header *multipart.FileHeader) (string, error) {
 	ext := filepath.Ext(header.Filename)
 	file_name := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	file_storage := env.GetString("FILE_STORAGE_PATH", "/app/file_storage")
-	save_path := filepath.Join(file_storage, "recipes", file_name)
+	save_path := ImagePath(file_name)
 	logger.Log.Debugf("Saving image to %s", save_path)
 	if err := os.MkdirAll(filepath.Dir(save_path), os.ModePerm); err != nil {
 		logger.Log.Errorf("Failed to create directory %s: %v", filepath.Dir(save_path), err)
